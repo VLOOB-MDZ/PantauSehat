@@ -1610,6 +1610,9 @@ tailwind.config = {
         currentK = ev.transform.k;
         g.attr('transform', ev.transform);
         g.selectAll('.province').style('stroke-width', (1.5 / currentK) + 'px');
+        g.selectAll('.marker-group').attr('transform', function() {
+          return `translate(${this.getAttribute('data-x')},${this.getAttribute('data-y')}) scale(${1 / currentK})`;
+        });
         svgEl.style.cursor = 'grabbing';
       })
       .on('end', () => { svgEl.style.cursor = 'grab'; });
@@ -1652,9 +1655,16 @@ tailwind.config = {
       const color = MARKER_COLOR[m.risk] || '#938f99';
       const baseR = MARKER_R[m.risk]  || 3;
 
-      // Pulsing ring
-      const ring = g.append('circle')
-        .attr('cx', px).attr('cy', py)
+      // Wrapper group — inverse-scaled on zoom so screen size stays constant
+      const mg = g.append('g')
+        .attr('class', 'marker-group')
+        .attr('data-x', px)
+        .attr('data-y', py)
+        .attr('transform', `translate(${px},${py})`);
+
+      // Pulsing ring (coords relative to group origin)
+      const ring = mg.append('circle')
+        .attr('cx', 0).attr('cy', 0)
         .attr('r', baseR * 0.8)
         .attr('data-marker', m.name)
         .style('fill', 'none')
@@ -1671,8 +1681,8 @@ tailwind.config = {
       pulse();
 
       // Centre dot
-      g.append('circle')
-        .attr('cx', px).attr('cy', py)
+      mg.append('circle')
+        .attr('cx', 0).attr('cy', 0)
         .attr('r', baseR)
         .attr('data-marker', m.name)
         .style('fill', color)
