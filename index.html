@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PantauSehat | Pusat Intelijen Kesehatan Nasional</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "bg-base":         "#070708",
+        "surface":         "#0f0d13",
+        "surface-low":     "#141218",
+        "surface-mid":     "#1d1b20",
+        "surface-high":    "#2b292f",
+        "surface-top":     "#36343a",
+        "on-surface":      "#e6e0e9",
+        "on-muted":        "#938f99",
+        "outline-dim":     "#49454f",
+        "coral":           "#ff5f45",
+        "cyan":            "#4fd1ed",
+        "amber":           "#e7c365",
+      },
+      fontFamily: {
+        display: ["Manrope", "sans-serif"],
+        body:    ["Inter", "sans-serif"],
+        mono:    ["Space Grotesk", "monospace"],
+      },
+    }
+  }
+}
+</script>
+
+<style>
+  /* ── Reset / base ── */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: #070708;
+    background-image:
+      radial-gradient(ellipse 900px 700px at -10% 15%,  rgba(255,95,69,.045)  0%, transparent 55%),
+      radial-gradient(ellipse 700px 600px at 110%  85%, rgba(79,209,237,.03)  0%, transparent 55%),
+      radial-gradient(ellipse 1100px 900px at 50%  50%, rgba(103,80,164,.018) 0%, transparent 65%);
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -.01em;
+    color: #e6e0e9;
+    overflow-x: hidden;
+  }
+
+  /* SVG grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: .022;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Glass surface ── */
+  .glass {
+    background: rgba(15,13,19,.62);
+    backdrop-filter: blur(44px) saturate(160%);
+    -webkit-backdrop-filter: blur(44px) saturate(160%);
+    border: .5px solid rgba(255,255,255,.065);
+    transition: border-color .4s cubic-bezier(.16,1,.3,1),
+                background   .4s cubic-bezier(.16,1,.3,1);
+  }
+  .glass:hover {
+    border-color: rgba(255,255,255,.11);
+    background: rgba(20,18,26,.75);
+  }
+  .glass-hi {
+    background: rgba(22,20,28,.82);
+    backdrop-filter: blur(60px) saturate(180%);
+    -webkit-backdrop-filter: blur(60px) saturate(180%);
+    border: .5px solid rgba(255,255,255,.09);
+  }
+
+  /* ── Typography helpers ── */
+  .h-tight  { letter-spacing: -.04em; line-height: 1.0; }
+  .h-snug   { letter-spacing: -.025em; line-height: 1.15; }
+
+  /* ── Pulse animations ── */
+  @keyframes pulse-coral {
+    0%   { transform: scale(.9);  box-shadow: 0 0 0 0   rgba(255,95,69,.55); }
+    70%  { transform: scale(1);   box-shadow: 0 0 0 10px rgba(255,95,69,0); }
+    100% { transform: scale(.9);  box-shadow: 0 0 0 0   rgba(255,95,69,0); }
+  }
+  @keyframes pulse-amber {
+    0%   { transform: scale(.9);  box-shadow: 0 0 0 0   rgba(231,195,101,.4); }
+    70%  { transform: scale(1);   box-shadow: 0 0 0 8px  rgba(231,195,101,0); }
+    100% { transform: scale(.9);  box-shadow: 0 0 0 0   rgba(231,195,101,0); }
+  }
+  @keyframes pulse-cyan {
+    0%   { transform: scale(.9);  box-shadow: 0 0 0 0   rgba(79,209,237,.35); }
+    70%  { transform: scale(1);   box-shadow: 0 0 0 8px  rgba(79,209,237,0); }
+    100% { transform: scale(.9);  box-shadow: 0 0 0 0   rgba(79,209,237,0); }
+  }
+
+  .dot-coral { animation: pulse-coral 2.4s cubic-bezier(.4,0,.6,1) infinite; }
+  .dot-amber { animation: pulse-amber 3s   cubic-bezier(.4,0,.6,1) infinite; animation-delay:.4s; }
+  .dot-cyan  { animation: pulse-cyan  3.4s cubic-bezier(.4,0,.6,1) infinite; animation-delay:.8s; }
+
+  /* ── Bar chart animation ── */
+  @keyframes bar-in {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+  }
+  .bar { transform-origin: bottom; animation: bar-in .9s cubic-bezier(.34,1.56,.64,1) both; }
+
+  /* ── Scroll reveal ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity .75s cubic-bezier(.16,1,.3,1),
+                transform .75s cubic-bezier(.16,1,.3,1);
+  }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+
+  /* Fallback: ensure visible after delay even without scroll */
+  @keyframes reveal-fallback {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Grid dots background (map area) ── */
+  .dot-grid {
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,.09) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* ── Scrollbar hide ── */
+  .no-bar::-webkit-scrollbar { display:none; }
+  .no-bar { -ms-overflow-style:none; scrollbar-width:none; }
+
+  /* ── Briefings scrollbar ── */
+  .briefings-scroll::-webkit-scrollbar { width:3px; }
+  .briefings-scroll::-webkit-scrollbar-track { background:transparent; }
+  .briefings-scroll::-webkit-scrollbar-thumb { background:rgba(255,95,69,.22); border-radius:99px; }
+  .briefings-scroll::-webkit-scrollbar-thumb:hover { background:rgba(255,95,69,.45); }
+
+  /* ── Map spinner ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .map-spin { animation: spin .9s linear infinite; }
+
+  /* ── Active nav underline ── */
+  .nav-link.active {
+    color: white;
+  }
+  .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; left: 0;
+    width: 100%; height: 1.5px;
+    background: #ff5f45;
+    border-radius: 9999px;
+  }
+
+  /* ── Material icons ── */
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+  .icon-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+  /* ── Image zoom on hover ── */
+  .img-zoom { transition: transform .7s cubic-bezier(.4,0,.2,1); }
+  .group:hover .img-zoom { transform: scale(1.08); }
+
+
+  /* ── Status progress bar base ── */
+  .prog-track { height: 1px; background: rgba(255,255,255,.05); border-radius: 999px; overflow: hidden; }
+  .prog-fill  { height: 100%; border-radius: 999px; transition: width .5s cubic-bezier(.16,1,.3,1); }
+
+  /* ── Onboarding overlay ── */
+  @keyframes ob-pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:.35; transform:scale(.8); }
+  }
+  @keyframes ob-card-in {
+    from { opacity:0; transform:translateY(28px) scale(.97); }
+    to   { opacity:1; transform:translateY(0)    scale(1); }
+  }
+  @keyframes ob-badge-in {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  #onboarding-overlay {
+    position:fixed; inset:0; z-index:9999;
+    background:#070708;
+    display:none; align-items:center; justify-content:center;
+    padding:24px;
+    transition:opacity .55s cubic-bezier(.16,1,.3,1);
+  }
+  #ob-card {
+    position:relative; width:100%; max-width:520px;
+    background:rgba(15,13,19,.85);
+    backdrop-filter:blur(60px) saturate(160%);
+    -webkit-backdrop-filter:blur(60px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.085);
+    border-radius:24px; padding:44px 40px;
+    overflow:hidden;
+    animation:ob-card-in .7s .15s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .ob-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,95,69,.1); border:.5px solid rgba(255,95,69,.22);
+    border-radius:100px; padding:6px 14px; margin-bottom:28px;
+    animation:ob-badge-in .5s .5s both;
+  }
+  .ob-badge-dot {
+    width:6px; height:6px; border-radius:50%; background:#ff5f45;
+    animation:ob-pulse 1.5s infinite;
+  }
+  .ob-badge-text {
+    font-family:'Space Grotesk',monospace; font-size:11px;
+    font-weight:600; letter-spacing:.1em; color:#ff5f45; text-transform:uppercase;
+  }
+  .ob-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,.15); display:inline-block;
+    transition:width .3s cubic-bezier(.34,1.56,.64,1), background .3s;
+  }
+  .ob-dot-active { width:22px; background:#ff5f45; border-radius:100px; }
+  .ob-chip {
+    background:rgba(255,255,255,.04); border:.5px solid rgba(255,255,255,.08);
+    border-radius:14px; padding:14px 20px; flex:1; min-width:80px;
+  }
+  .ob-cta {
+    display:flex; align-items:center; gap:8px;
+    background:#ff5f45; color:#fff;
+    font-family:'Manrope',sans-serif; font-size:14px; font-weight:700;
+    letter-spacing:-.01em; border:none; border-radius:12px;
+    padding:13px 22px; cursor:pointer;
+    transition:opacity .2s, transform .2s cubic-bezier(.34,1.56,.64,1);
+    outline:none;
+  }
+  .ob-cta:hover  { opacity:.88; transform:translateX(3px); }
+  .ob-cta:active { transform:scale(.97); }
+  .ob-skip {
+    background:none; border:none;
+    font-family:'Inter',sans-serif; font-size:12px;
+    color:#49454f; cursor:pointer; padding:0;
+    letter-spacing:.02em;
+    transition:color .2s;
+  }
+  .ob-skip:hover { color:#938f99; }
+  #ob-slide-1 { transition:opacity .3s, transform .3s; }
+  #ob-slide-2 {
+    display:none; opacity:0; transform:translateY(20px);
+    transition:opacity .42s cubic-bezier(.16,1,.3,1), transform .42s cubic-bezier(.16,1,.3,1);
+  }
+  #ob-blob-coral {
+    position:absolute; width:700px; height:600px; top:-10%; left:-18%;
+    background:radial-gradient(ellipse at center,rgba(255,95,69,.13) 0%,transparent 60%);
+    filter:blur(40px); pointer-events:none;
+    transform:translate(-60px,-60px);
+    transition:transform 1.4s cubic-bezier(.16,1,.3,1);
+  }
+  #ob-blob-cyan {
+    position:absolute; width:600px; height:500px; bottom:-12%; right:-18%;
+    background:radial-gradient(ellipse at center,rgba(79,209,237,.09) 0%,transparent 60%);
+    filter:blur(40px); pointer-events:none;
+    transform:translate(60px,60px);
+    transition:transform 1.6s cubic-bezier(.16,1,.3,1);
+  }
+  #ob-blob-purple {
+    position:absolute; width:400px; height:400px; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(ellipse at center,rgba(103,80,164,.07) 0%,transparent 60%);
+    filter:blur(60px); pointer-events:none;
+  }
+  .ob-grain {
+    position:absolute; inset:0; width:100%; height:100%;
+    opacity:.025; pointer-events:none;
+  }
+  .ob-top-line {
+    position:absolute; top:0; left:10%; right:10%; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,95,69,.35),rgba(79,209,237,.2),transparent);
+    pointer-events:none;
+  }
+</style>
+</head>
+
+<body class="min-h-screen selection:bg-coral/30 selection:text-white">
+
+<!-- ═══════════════════════════════════════════
+     ONBOARDING OVERLAY
+═══════════════════════════════════════════ -->
+<div id="onboarding-overlay" aria-modal="true" role="dialog" aria-label="Selamat datang di PantauSehat">
+
+  <!-- Ambient blobs -->
+  <div id="ob-blob-coral"></div>
+  <div id="ob-blob-cyan"></div>
+  <div id="ob-blob-purple"></div>
+  <svg class="ob-grain" xmlns="http://www.w3.org/2000/svg"><filter id="ob-grain-f"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#ob-grain-f)"/></svg>
+
+  <!-- Card -->
+  <div id="ob-card">
+    <div class="ob-top-line"></div>
+
+    <!-- ── Slide 1 ── -->
+    <div id="ob-slide-1">
+      <div class="ob-badge">
+        <span class="ob-badge-dot"></span>
+        <span class="ob-badge-text">Sistem Aktif · Pemantauan 24/7</span>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <svg width="46" height="46" viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="46" height="46" rx="11" fill="rgba(255,95,69,.1)" stroke="rgba(255,95,69,.18)" stroke-width=".5"/>
+          <polyline points="7,32 15,20 21,26 29,13 38,17" stroke="#ff5f45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="38" cy="17" r="2.8" fill="#ff5f45"/>
+        </svg>
+      </div>
+
+      <h1 id="ob-headline" style="font-family:'Manrope',sans-serif;font-size:clamp(24px,5vw,34px);font-weight:800;letter-spacing:-.035em;line-height:1.15;color:#e6e0e9;margin-bottom:14px;min-height:80px;"></h1>
+
+      <p style="font-family:'Inter',sans-serif;font-size:15px;line-height:1.72;color:#938f99;margin-bottom:40px;">
+        Pantau penyebaran wabah penyakit di seluruh <span style="color:#e6e0e9;font-weight:500;">38 provinsi Indonesia</span> secara real-time. Data intelijen kesehatan yang transparan, akurat, dan bisa diakses siapa saja.
+      </p>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="ob-dot ob-dot-active"></span>
+          <span class="ob-dot"></span>
+        </div>
+        <button class="ob-cta" id="ob-next-btn" onclick="obGoSlide2()">
+          Selanjutnya
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Slide 2 ── -->
+    <div id="ob-slide-2">
+      <p style="font-family:'Space Grotesk',monospace;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#938f99;margin-bottom:10px;">Dibuat oleh</p>
+
+      <h2 style="font-family:'Manrope',sans-serif;font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:-.045em;line-height:1;color:#e6e0e9;margin-bottom:6px;">
+        VLOOB<span style="color:#ff5f45;">.</span>teams
+      </h2>
+
+      <p style="font-family:'Inter',sans-serif;font-size:14px;line-height:1.65;color:#938f99;margin-bottom:28px;font-style:italic;">
+        "Anak muda Indonesia yang menolak diam."
+      </p>
+
+      <div style="display:flex;gap:10px;margin-bottom:38px;flex-wrap:wrap;">
+        <div class="ob-chip">
+          <span style="font-family:'Space Grotesk',monospace;font-size:22px;font-weight:700;color:#ff5f45;display:block;line-height:1.1;">18+</span>
+          <span style="font-family:'Inter',sans-serif;font-size:11px;color:#938f99;">tahun rata-rata</span>
+        </div>
+        <div class="ob-chip">
+          <span style="font-family:'Space Grotesk',monospace;font-size:22px;font-weight:700;color:#4fd1ed;display:block;line-height:1.1;">38</span>
+          <span style="font-family:'Inter',sans-serif;font-size:11px;color:#938f99;">provinsi dipantau</span>
+        </div>
+        <div class="ob-chip">
+          <span style="font-family:'Space Grotesk',monospace;font-size:22px;font-weight:700;color:#e7c365;display:block;line-height:1.1;">24/7</span>
+          <span style="font-family:'Inter',sans-serif;font-size:11px;color:#938f99;">surveilans aktif</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="ob-dot"></span>
+          <span class="ob-dot ob-dot-active"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+          <button class="ob-cta" onclick="obDismiss()">
+            Masuk ke Dashboard
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="ob-skip" onclick="obDismiss()">Lewati</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════ -->
+<header class="fixed top-0 z-50 w-full border-b border-white/[.03]" style="background:rgba(7,7,8,.55); backdrop-filter:blur(28px);">
+  <div class="max-w-[1280px] mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
+
+    <!-- Logo + Nav -->
+    <div class="flex items-center gap-10">
+      <a href="#" class="flex items-center gap-2.5 group">
+        <div class="w-9 h-9 rounded-lg flex-shrink-0 border border-coral/25 bg-coral/10 flex items-center justify-center">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+            <polyline points="2,18 8,18 11,10 15,26 19,14 22,22 26,18 34,18"
+                      stroke="#ff5f45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="font-display text-[17px] font-bold text-white h-snug hidden sm:block">PantauSehat</span>
+      </a>
+
+      <nav class="hidden lg:flex items-center gap-7" id="main-nav">
+        <a href="#surveillance" class="nav-link relative text-sm font-medium text-on-muted hover:text-white transition-colors duration-200">Surveilans</a>
+        <a href="#epidemiology" class="nav-link relative text-sm font-medium text-on-muted hover:text-white transition-colors duration-200">Epidemiologi</a>
+        <a href="#clusters"     class="nav-link relative text-sm font-medium text-on-muted hover:text-white transition-colors duration-200">Unit Respons</a>
+        <a href="#epidemiology" class="nav-link relative text-sm font-medium text-on-muted hover:text-white transition-colors duration-200">Sumber Daya</a>
+      </nav>
+    </div>
+
+
+  </div>
+</header>
+
+
+<!-- ═══════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════ -->
+<main class="pt-20 relative z-10">
+
+  <!-- ── HERO ────────────────────────────────── -->
+  <section id="surveillance" class="relative min-h-[76vh] flex items-center pt-16 pb-28 overflow-hidden">
+
+    <!-- Ambient blobs -->
+    <div class="absolute -left-40 top-1/4 w-[520px] h-[480px] rounded-full bg-coral/[.04] blur-[140px] pointer-events-none"></div>
+    <div class="absolute right-0 bottom-0 w-[600px] h-[500px] rounded-full bg-cyan/[.03] blur-[160px] pointer-events-none"></div>
+
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8 w-full relative z-10">
+      <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+
+        <!-- Left -->
+        <div class="lg:col-span-7 space-y-9">
+          <!-- Live badge -->
+          <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/[.06] bg-white/[.03]">
+            <span class="w-1.5 h-1.5 rounded-full bg-coral dot-coral"></span>
+            <span class="font-mono text-[10px] text-white/55 uppercase tracking-[.16em]">Sistem Pemantauan Langsung</span>
+          </div>
+
+          <!-- Headline -->
+          <h1 class="font-display text-[58px] sm:text-[70px] lg:text-[80px] font-extrabold text-white h-tight">
+            Pusat Intelijen<br/>
+            <span class="text-white/22">Kesehatan Nasional.</span>
+          </h1>
+
+          <p class="font-body text-[17px] text-on-muted max-w-[480px] leading-[1.78] font-light">
+            Surveilans penyakit menular secara real-time di seluruh kepulauan Indonesia. Memanfaatkan infrastruktur data yang aman dan analitik prediktif untuk keselamatan publik.
+          </p>
+
+          <div class="flex flex-wrap gap-5 pt-1">
+            <a href="#map" class="inline-block px-10 py-4 bg-white text-black rounded-xl font-display font-bold text-sm hover:bg-coral hover:text-white active:scale-[.97] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/60">
+              Buka Dashboard
+            </a>
+            <a href="#epidemiology" class="inline-block px-10 py-4 bg-white/[.03] text-white border border-white/[.1] rounded-xl font-display font-bold text-sm hover:bg-white/[.07] hover:border-white/20 active:scale-[.97] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+              Laporan Situasi Harian
+            </a>
+          </div>
+        </div>
+
+        <!-- Right: Alert card -->
+        <div class="lg:col-span-5">
+          <div class="glass rounded-2xl p-8 lg:p-10">
+            <!-- Header -->
+            <div class="flex justify-between items-start mb-7">
+              <div>
+                <p class="font-mono text-[9.5px] text-on-muted uppercase tracking-[.17em]">Peringatan Nasional Aktif</p>
+                <div class="mt-2.5 w-8 h-[1.5px] bg-coral/50 rounded-full"></div>
+              </div>
+              <span class="material-symbols-outlined text-coral icon-fill" style="font-size:22px">emergency_home</span>
+            </div>
+
+            <!-- Big number -->
+            <div class="mb-9">
+              <div id="stat-total" class="font-display text-[52px] font-extrabold text-white h-tight leading-none">1,248</div>
+              <div class="flex items-center gap-2.5 mt-2.5">
+                <span id="stat-pct" class="font-mono text-sm font-bold text-coral">+12.4%</span>
+                <span class="font-mono text-[11px] text-white/30">dari periode sebelumnya</span>
+              </div>
+            </div>
+
+            <!-- Bar chart -->
+            <div class="h-28 flex items-end gap-1.5">
+              <div class="flex-1 bg-white/[.04] rounded-t-sm bar" style="height:28%;animation-delay:.05s"></div>
+              <div class="flex-1 bg-white/[.04] rounded-t-sm bar" style="height:42%;animation-delay:.12s"></div>
+              <div class="flex-1 bg-white/[.04] rounded-t-sm bar" style="height:36%;animation-delay:.19s"></div>
+              <div class="flex-1 bg-white/[.05] rounded-t-sm bar" style="height:58%;animation-delay:.26s"></div>
+              <div class="flex-1 bg-white/[.06] rounded-t-sm bar" style="height:70%;animation-delay:.33s"></div>
+              <div class="flex-1 bg-coral/50  rounded-t-sm bar" style="height:84%;animation-delay:.40s"></div>
+              <div class="flex-1 bg-coral     rounded-t-sm bar" style="height:100%;animation-delay:.47s"></div>
+            </div>
+            <div class="mt-3 flex justify-between font-mono text-[9px] text-white/25 uppercase tracking-wider">
+              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>Mei</span><span>Jun</span><span>Jul</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── GEOGRAPHIC DISTRIBUTION ──────────────── -->
+  <section id="map" class="max-w-[1280px] mx-auto px-6 lg:px-8 mb-32 reveal">
+    <div class="grid lg:grid-cols-4 gap-6">
+
+      <!-- Map card: D3 interactive Indonesia province map -->
+      <div id="map-card" class="lg:col-span-3 glass rounded-2xl overflow-hidden relative" style="min-height:560px;">
+
+        <!-- Loading spinner -->
+        <div id="map-loading" class="absolute inset-0 flex flex-col items-center justify-center z-20 gap-4">
+          <div class="w-5 h-5 rounded-full border-2 border-white/10 border-t-coral map-spin"></div>
+          <span class="font-mono text-[10px] text-on-muted uppercase tracking-[.2em]">Memuat data provinsi…</span>
+        </div>
+
+        <!-- Error state (hidden by default) -->
+        <div id="map-error" class="absolute inset-0 flex flex-col items-center justify-center z-20 gap-3 hidden">
+          <span class="material-symbols-outlined text-on-muted/40" style="font-size:40px">wifi_off</span>
+          <p class="font-mono text-[10px] text-on-muted/55 uppercase tracking-widest">Gagal memuat data peta</p>
+          <button id="map-retry" class="font-mono text-[9px] text-coral uppercase tracking-widest border border-coral/25 px-3 py-1.5 rounded-lg hover:bg-coral/10 transition-colors duration-200 active:scale-95">Coba Lagi</button>
+        </div>
+
+        <!-- D3 SVG canvas (hidden until loaded) -->
+        <svg id="indonesia-map" class="absolute inset-0 w-full h-full" style="display:none;cursor:grab;touch-action:none;"></svg>
+
+        <!-- Filter active banner -->
+        <div id="map-filter-banner" class="absolute bottom-5 left-1/2 z-10 hidden" style="transform:translateX(-50%)">
+          <div class="flex items-center gap-2.5 bg-black/80 backdrop-blur-2xl px-4 py-2 rounded-full border border-coral/30 shadow-[0_0_20px_rgba(255,95,69,.15)]">
+            <span class="material-symbols-outlined text-coral" style="font-size:13px">filter_alt</span>
+            <span class="font-mono text-[9px] text-white uppercase tracking-[.14em]">Filter: <span id="map-filter-label">—</span></span>
+            <button id="map-filter-clear" class="font-mono text-[9px] text-white/45 hover:text-coral ml-1 transition-colors duration-200 active:scale-95 focus-visible:outline-none">× Hapus</button>
+          </div>
+        </div>
+
+        <!-- Legend (bottom-left, always visible) -->
+        <div class="absolute top-5 left-5 z-10 flex flex-col gap-1.5 pointer-events-none select-none">
+          <div class="flex items-center gap-2 bg-black/65 backdrop-blur-2xl px-3 py-1.5 rounded-lg border border-white/[.04]">
+            <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background:#ff5f45;"></span>
+            <span class="font-mono text-[8px] font-bold tracking-[.14em] text-white/65 uppercase">Kritis / Tinggi</span>
+          </div>
+          <div class="flex items-center gap-2 bg-black/65 backdrop-blur-2xl px-3 py-1.5 rounded-lg border border-white/[.04]">
+            <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background:#e7c365;"></span>
+            <span class="font-mono text-[8px] font-bold tracking-[.14em] text-white/65 uppercase">Sedang</span>
+          </div>
+          <div class="flex items-center gap-2 bg-black/65 backdrop-blur-2xl px-3 py-1.5 rounded-lg border border-white/[.04]">
+            <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background:#4fd1ed;"></span>
+            <span class="font-mono text-[8px] font-bold tracking-[.14em] text-white/65 uppercase">Rendah / Stabil</span>
+          </div>
+          <div class="flex items-center gap-2 bg-black/65 backdrop-blur-2xl px-3 py-1.5 rounded-lg border border-white/[.04]">
+            <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background:rgba(255,255,255,.3);"></span>
+            <span class="font-mono text-[8px] font-bold tracking-[.14em] text-white/65 uppercase">Normal</span>
+          </div>
+        </div>
+
+        <!-- Zoom controls (top-right) -->
+        <div class="absolute top-5 right-5 z-10 flex flex-col gap-1.5">
+          <button id="map-zoom-in"    class="w-8 h-8 glass-hi rounded-lg border border-white/[.07] flex items-center justify-center text-white/55 hover:text-white hover:border-white/18 transition-colors duration-200 active:scale-95 focus-visible:outline-none font-mono font-bold text-base leading-none">+</button>
+          <button id="map-zoom-out"   class="w-8 h-8 glass-hi rounded-lg border border-white/[.07] flex items-center justify-center text-white/55 hover:text-white hover:border-white/18 transition-colors duration-200 active:scale-95 focus-visible:outline-none font-mono font-bold text-base leading-none">−</button>
+          <button id="map-zoom-reset" class="w-8 h-8 glass-hi rounded-lg border border-white/[.07] flex items-center justify-center text-white/35 hover:text-white hover:border-white/18 transition-colors duration-200 active:scale-95 focus-visible:outline-none" title="Reset view">
+            <span class="material-symbols-outlined" style="font-size:15px">center_focus_strong</span>
+          </button>
+        </div>
+
+        <!-- Province intel panel (slides up from bottom on province click) -->
+        <div id="province-panel" class="absolute bottom-0 left-0 right-0 z-20" style="transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);pointer-events:none;">
+          <div class="glass-hi border-t border-white/[.07] rounded-b-2xl px-6 py-5">
+            <div class="flex items-start justify-between gap-4 mb-3">
+              <div class="min-w-0">
+                <div id="panel-badge" class="inline-block font-mono text-[8.5px] font-bold tracking-[.16em] uppercase px-2 py-0.5 rounded-sm border mb-1.5" style="color:#938f99;background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);">Normal</div>
+
+                <h4 id="panel-name" class="font-display text-[17px] font-extrabold text-white truncate" style="letter-spacing:-.03em;line-height:1.15">—</h4>
+              </div>
+              <button id="panel-close" class="flex-shrink-0 mt-0.5 text-on-muted/45 hover:text-white transition-colors duration-200 active:scale-90 focus-visible:outline-none">
+                <span class="material-symbols-outlined" style="font-size:18px">close</span>
+              </button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-3">
+              <div>
+                <p class="font-mono text-[7.5px] text-on-muted uppercase tracking-widest mb-1">Penyakit Utama</p>
+                <p id="panel-disease" class="font-display font-bold text-[13px] text-white leading-tight">—</p>
+              </div>
+              <div>
+                <p class="font-mono text-[7.5px] text-on-muted uppercase tracking-widest mb-1">Kasus Aktif</p>
+                <div class="flex items-baseline gap-1.5">
+                  <span id="panel-cases" class="font-display font-bold text-[13px] text-white">—</span>
+                  <span id="panel-trend" class="font-mono text-[10px] font-bold">—</span>
+                </div>
+              </div>
+              <div>
+                <p class="font-mono text-[7.5px] text-on-muted uppercase tracking-widest mb-1">Populasi</p>
+                <p id="panel-pop" class="font-display font-bold text-[13px] text-white">—</p>
+              </div>
+            </div>
+            <p id="panel-desc" class="font-body text-[11.5px] text-on-muted leading-[1.68] line-clamp-2">—</p>
+            <div id="panel-news-wrap" class="mt-3 pt-3 border-t border-white/[.06]" style="display:none">
+              <p class="font-mono text-[7.5px] text-on-muted uppercase tracking-widest mb-2">Berita Terkait</p>
+              <div id="panel-news" class="flex flex-col gap-2"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hover tooltip -->
+        <div id="map-tooltip" class="absolute z-30 pointer-events-none" style="opacity:0;transition:opacity .12s ease;top:0;left:0;will-change:transform;">
+          <div class="glass-hi px-3 py-1.5 rounded-lg border border-white/[.1] shadow-[0_4px_20px_rgba(0,0,0,.4)]">
+            <span id="tooltip-name" class="font-mono text-[9px] text-white uppercase tracking-[.12em] font-bold whitespace-nowrap">—</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: quick stats -->
+      <div class="flex lg:flex-col gap-4 lg:gap-4 flex-wrap">
+        <div class="glass rounded-2xl p-6 flex-1 min-w-[140px]">
+          <p class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Kasus Masuk Hari Ini</p>
+          <div id="stat-today" class="font-display text-[40px] font-extrabold text-white h-tight leading-none">42</div>
+          <p class="font-mono text-[10px] text-coral font-bold mt-2">Kasus Terverifikasi</p>
+        </div>
+        <div class="glass rounded-2xl p-6 flex-1 min-w-[140px]">
+          <p class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Jangkauan Geografis</p>
+          <div id="stat-provinces" class="font-display text-[40px] font-extrabold text-white h-tight leading-none">
+            12<span class="text-base font-normal text-on-muted/55"> / 38</span>
+          </div>
+          <p class="font-mono text-[10px] text-on-muted mt-2">Provinsi</p>
+        </div>
+        <div class="glass rounded-2xl p-6 flex-1 min-w-[140px]">
+          <p class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Ancaman Utama</p>
+          <div class="font-display text-[20px] font-extrabold text-white h-snug">Demam Berdarah</div>
+          <p id="stat-dengue" class="font-mono text-[10px] text-coral font-bold mt-2">↑ 24% Angka Insiden</p>
+        </div>
+        <button id="btn-export-csv" class="w-full py-5 glass hover:bg-white hover:text-black font-mono text-[9px] tracking-[.2em] uppercase text-white rounded-xl border border-white/[.06] hover:border-white transition-all duration-300 active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
+          Ekspor Data Analisis
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ── SURVEILLANCE CLUSTERS ──────────────────── -->
+  <section id="clusters" class="max-w-[1280px] mx-auto px-6 lg:px-8 mb-32 reveal">
+    <div class="flex items-end justify-between mb-11">
+      <div>
+        <h2 class="font-display text-[38px] font-extrabold text-white h-tight">Klaster Surveilans</h2>
+        <p class="text-on-muted text-sm font-light mt-3 leading-relaxed">Klaster transmisi yang teridentifikasi dalam siklus 24 jam terakhir.</p>
+      </div>
+      <button class="font-mono text-[9.5px] font-bold tracking-[.16em] uppercase text-on-muted hover:text-white transition-colors duration-200 active:opacity-60 focus-visible:outline-none">
+        Tampilan Analitik →
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <!-- CRITICAL -->
+      <div data-cluster="dengue" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(255,95,69,.08)] transition-shadow duration-500 focus-within:ring-1 focus-within:ring-coral/30">
+        <div class="flex justify-between items-start mb-10">
+          <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-coral border border-coral/25 px-2.5 py-1 rounded-sm uppercase">Kritis</span>
+          <span class="font-mono text-[11px] text-white/28">01</span>
+        </div>
+        <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-coral transition-colors duration-200">DBD — Jawa Barat</h4>
+        <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Metropolitan Bandung, Bekasi</p>
+        <div class="mt-10 prog-track">
+          <div class="prog-fill bg-coral group-hover:brightness-110" style="width:75%"></div>
+        </div>
+        <p class="font-mono text-[9px] text-coral/55 mt-2 tracking-wider">75% ambang batas peringatan</p>
+      </div>
+
+      <!-- MONITORING -->
+      <div data-cluster="hantavirus" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(231,195,101,.06)] transition-shadow duration-500">
+        <div class="flex justify-between items-start mb-10">
+          <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-amber border border-amber/25 px-2.5 py-1 rounded-sm uppercase">Pemantauan</span>
+          <span class="font-mono text-[11px] text-white/28">02</span>
+        </div>
+        <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-amber transition-colors duration-200">Hantavirus Pulse</h4>
+        <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Kawasan pesisir Jakarta Utara</p>
+        <div class="mt-10 prog-track">
+          <div class="prog-fill bg-amber" style="width:28%"></div>
+        </div>
+        <p class="font-mono text-[9px] text-amber/55 mt-2 tracking-wider">28% ambang batas peringatan</p>
+      </div>
+
+      <!-- STABLE -->
+      <div data-cluster="rabies" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(79,209,237,.06)] transition-shadow duration-500">
+        <div class="flex justify-between items-start mb-10">
+          <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-cyan border border-cyan/25 px-2.5 py-1 rounded-sm uppercase">Stabil</span>
+          <span class="font-mono text-[11px] text-white/28">03</span>
+        </div>
+        <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-cyan transition-colors duration-200">Vektor Rabies</h4>
+        <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Bali — Kabupaten Badung</p>
+        <div class="mt-10 prog-track">
+          <div class="prog-fill bg-cyan" style="width:48%"></div>
+        </div>
+        <p class="font-mono text-[9px] text-cyan/55 mt-2 tracking-wider">48% ambang batas peringatan</p>
+      </div>
+
+      <!-- INVESTIGATION -->
+      <div data-cluster="mpox" class="cluster-card glass p-7 rounded-2xl group cursor-pointer">
+        <div class="flex justify-between items-start mb-10">
+          <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-white/45 border border-white/15 px-2.5 py-1 rounded-sm uppercase">Investigasi</span>
+          <span class="font-mono text-[11px] text-white/28">04</span>
+        </div>
+        <h4 class="font-display text-[19px] font-bold text-white h-snug">Skrining Mpox</h4>
+        <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Otoritas Pelabuhan Nasional</p>
+        <div class="mt-10 prog-track">
+          <div class="prog-fill bg-white/30" style="width:18%"></div>
+        </div>
+        <p class="font-mono text-[9px] text-white/28 mt-2 tracking-wider">18% ambang batas peringatan</p>
+      </div>
+
+      <!-- CRITICAL: Malaria — Papua -->
+      <div data-cluster="malaria" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(255,95,69,.08)] transition-shadow duration-500 focus-within:ring-1 focus-within:ring-coral/30">
+        <div class="flex justify-between items-start mb-10">
+          <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-coral border border-coral/25 px-2.5 py-1 rounded-sm uppercase">Kritis</span>
+          <span class="font-mono text-[11px] text-white/28">05</span>
+        </div>
+        <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-coral transition-colors duration-200">Lonjakan Malaria — Papua</h4>
+        <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Distrik pegunungan, Jayapura</p>
+        <div class="mt-10 prog-track">
+          <div class="prog-fill bg-coral group-hover:brightness-110" style="width:82%"></div>
+        </div>
+        <p class="font-mono text-[9px] text-coral/55 mt-2 tracking-wider">82% ambang batas peringatan</p>
+      </div>
+
+      <!-- MONITORING: Leptospirosis — East Java -->
+      <div data-cluster="leptospirosis" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(231,195,101,.06)] transition-shadow duration-500">
+        <div class="flex justify-between items-start mb-10">
+          <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-amber border border-amber/25 px-2.5 py-1 rounded-sm uppercase">Pemantauan</span>
+          <span class="font-mono text-[11px] text-white/28">06</span>
+        </div>
+        <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-amber transition-colors duration-200">Leptospirosis — Jawa Timur</h4>
+        <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Zona pasca-banjir, Surabaya</p>
+        <div class="mt-10 prog-track">
+          <div class="prog-fill bg-amber" style="width:61%"></div>
+        </div>
+        <p class="font-mono text-[9px] text-amber/55 mt-2 tracking-wider">61% ambang batas peringatan</p>
+      </div>
+
+      <!-- STABLE: Tuberculosis — Multi-province -->
+      <div data-cluster="tuberculosis" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(79,209,237,.06)] transition-shadow duration-500">
+        <div class="flex justify-between items-start mb-10">
+          <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-cyan border border-cyan/25 px-2.5 py-1 rounded-sm uppercase">Stabil</span>
+          <span class="font-mono text-[11px] text-white/28">07</span>
+        </div>
+        <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-cyan transition-colors duration-200">Tuberkulosis — Perkotaan</h4>
+        <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Jakarta, Surabaya, Medan</p>
+        <div class="mt-10 prog-track">
+          <div class="prog-fill bg-cyan" style="width:44%"></div>
+        </div>
+        <p class="font-mono text-[9px] text-cyan/55 mt-2 tracking-wider">44% ambang batas peringatan</p>
+      </div>
+
+      <!-- INVESTIGATION: Chikungunya — South Sulawesi -->
+      <div data-cluster="chikungunya" class="cluster-card glass p-7 rounded-2xl group cursor-pointer">
+        <div class="flex justify-between items-start mb-10">
+          <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-white/45 border border-white/15 px-2.5 py-1 rounded-sm uppercase">Investigasi</span>
+          <span class="font-mono text-[11px] text-white/28">08</span>
+        </div>
+        <h4 class="font-display text-[19px] font-bold text-white h-snug">Chikungunya — Sulawesi</h4>
+        <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Kawasan metropolitan Makassar</p>
+        <div class="mt-10 prog-track">
+          <div class="prog-fill bg-white/30" style="width:12%"></div>
+        </div>
+        <p class="font-mono text-[9px] text-white/28 mt-2 tracking-wider">12% ambang batas peringatan</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ── RISK INDEX + INTELLIGENCE BRIEFINGS ───── -->
+  <section id="epidemiology" class="max-w-[1280px] mx-auto px-6 lg:px-8 mb-32 grid lg:grid-cols-2 gap-16 lg:gap-20">
+
+    <!-- Risk Index by Province -->
+    <div class="space-y-8 reveal">
+      <h3 class="font-display text-[32px] font-extrabold text-white h-tight">Indeks Risiko per Provinsi</h3>
+
+      <!-- Search bar -->
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none" style="font-size:15px">search</span>
+        <input id="province-search" type="text" placeholder="Cari provinsi…"
+          class="w-full glass rounded-xl pl-9 pr-4 py-2.5 font-mono text-[11px] text-white placeholder-white/25 bg-transparent border border-white/[.07] focus:border-white/20 focus:outline-none transition-colors duration-200" />
+      </div>
+
+      <div class="glass rounded-2xl overflow-hidden">
+        <div style="max-height:420px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,95,69,.2) transparent;">
+          <table class="w-full border-collapse">
+            <thead class="sticky top-0 z-10" style="background:rgba(18,14,20,.95);">
+              <tr class="border-b border-white/[.04]">
+                <th class="text-left px-6 py-4 font-mono text-[9px] text-on-muted uppercase tracking-[.16em] font-normal">Wilayah</th>
+                <th class="text-left px-6 py-4 font-mono text-[9px] text-on-muted uppercase tracking-[.16em] font-normal">Tingkat Risiko</th>
+                <th class="text-left px-6 py-4 font-mono text-[9px] text-on-muted uppercase tracking-[.16em] font-normal">Tren</th>
+              </tr>
+            </thead>
+            <tbody id="province-tbody" class="divide-y divide-white/[.025]"></tbody>
+          </table>
+          <p id="province-empty" class="text-center font-mono text-[10px] text-white/20 py-8 uppercase tracking-widest" style="display:none">Provinsi tidak ditemukan</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Intelligence Briefings -->
+    <div class="space-y-6 reveal" style="transition-delay:.1s">
+      <div class="flex items-baseline justify-between">
+        <h3 class="font-display text-[32px] font-extrabold text-white h-tight">Laporan Intelijen</h3>
+        <span id="briefings-updated" class="font-mono text-[9px] text-white/25 uppercase tracking-[.12em]">Memuat berita…</span>
+      </div>
+
+      <!-- Scrollable feed -->
+      <div class="relative">
+        <!-- fade mask top -->
+        <div class="pointer-events-none absolute top-0 inset-x-0 h-4 z-10"
+             style="background:linear-gradient(to bottom,rgba(7,7,8,1),transparent)"></div>
+        <!-- fade mask bottom -->
+        <div class="pointer-events-none absolute bottom-0 inset-x-0 h-10 z-10"
+             style="background:linear-gradient(to top,rgba(7,7,8,.95),transparent)"></div>
+
+        <div id="briefings-feed" class="overflow-y-auto space-y-3 pr-1 briefings-scroll" style="max-height:540px;scrollbar-width:thin;scrollbar-color:rgba(255,95,69,.25) transparent;">
+
+          <!-- 1 — detikHealth -->
+          <a href="https://health.detik.com/berita-detikhealth/d-8479697/hantavirus-juga-ada-di-ri-kemenkes-catat-23-kasus-dalam-3-tahun-terakhir"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://akcdn.detik.net.id/community/media/visual/2025/06/28/1462777049-1751087305411_169.jpeg?w=700&q=90" alt="Hantavirus" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/1a1014/3d2020'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-coral/75 uppercase tracking-[.13em]">Laporan Lapangan</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 1 hari lalu ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">detikHealth</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">Hantavirus Juga Ada di RI: Kemenkes Catat 23 Kasus dalam 3 Tahun Terakhir</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">Kemenkes mencatat 23 kasus hantavirus di Indonesia tersebar di 9 provinsi, dengan 3 kematian. Kasus didominasi Seoul Virus dan tidak menular antarmanusia.</p>
+            </div>
+          </a>
+
+          <!-- 2 — Kemenkes RI -->
+          <a href="https://www.kemkes.go.id/id/kemenkes-waspadai-dinamika-campak-nasional-dan-global"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://www.kemkes.go.id/app_asset/image_content/177211866769a0628b12a432.48322353.jpg" alt="Campak" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/111a14/1f3a22'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-amber/75 uppercase tracking-[.13em]">Kebijakan Global</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 3 hari lalu ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">Kemenkes RI</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">Kemenkes Waspadai Dinamika Campak Nasional dan Global</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">Indonesia masuk peringkat kedua dunia dalam wabah campak — 8.224 kasus suspek dan 13 KLB dikonfirmasi laboratorium di 11 provinsi pada minggu ke-7 tahun 2026.</p>
+            </div>
+          </a>
+
+          <!-- 3 — ANTARA News -->
+          <a href="https://www.antaranews.com/berita/5559149/who-tegaskan-wabah-hantavirus-di-kapal-pesiar-bukan-awal-pandemi"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://img.antaranews.com/cache/1200x800/2026/05/08/CjkinzN000003_20260508_CBMFN0A001.jpg" alt="Hantavirus kapal pesiar" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/10141a/1e2a3a'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-cyan/75 uppercase tracking-[.13em]">Penilaian WHO</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 3 hari lalu ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">ANTARA News</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">WHO Tegaskan Wabah Hantavirus di Kapal Pesiar Bukan Awal Pandemi</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">WHO menyatakan wabah hantavirus di MV Hondius tidak mengindikasikan pandemi baru. Risiko penularan antarmanusia ke Indonesia dinilai tetap rendah.</p>
+            </div>
+          </a>
+
+          <!-- 4 — WHO Indonesia -->
+          <a href="https://www.who.int/indonesia/news/detail/09-02-2026-sumenep-successfully-ended-measles-outbreak"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://asset.kompas.com/crops/QhjgFmeFGVTHGgWtsK72XkFRppg=/1x0:609x405/1200x800/data/photo/2026/05/06/69fb329e819ee.png" alt="Measles" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/10141a/1e3040'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-cyan/75 uppercase tracking-[.13em]">Laporan WHO</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 9 Feb ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">WHO Indonesia</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">Sumenep Berhasil Mengakhiri KLB Campak</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">Melalui imunisasi terarah dan pelibatan masyarakat, Sumenep mencapai cakupan vaksin 96,1% dan resmi mengakhiri KLB campak — menjadi model penanggulangan wabah nasional.</p>
+            </div>
+          </a>
+
+          <!-- 5 — health.kompas.com -->
+          <a href="https://health.kompas.com/read/26E09223500268/epidemiolog-sebut-risiko-hantavirus-di-indonesia-rendah-tapi-perlu-waspada"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://asset.kompas.com/crops/QhjgFmeFGVTHGgWtsK72XkFRppg=/1x0:609x405/1200x800/data/photo/2026/05/06/69fb329e819ee.png" alt="Hantavirus" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/12181a/203030'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-cyan/75 uppercase tracking-[.13em]">Kajian Analitik</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 1 hari lalu ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">Kompas Health</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">Epidemiolog: Risiko Hantavirus di Indonesia Rendah, tapi Tetap Perlu Waspada</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">Pakar epidemiologi menilai risiko penyebaran hantavirus di Indonesia saat ini masih rendah, namun peningkatan surveilans tikus dan higienitas lingkungan tetap krusial.</p>
+            </div>
+          </a>
+
+          <!-- 6 — detikHealth -->
+          <a href="https://health.detik.com/berita-detikhealth/d-8480047/23-kasus-hantavirus-tersebar-di-9-provinsi-terbanyak-di-dki"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://akcdn.detik.net.id/community/media/visual/2026/05/08/hantavirus-1778207600038_169.jpeg?w=700&q=90" alt="Hantavirus sebaran" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/1a1014/3d2020'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-coral/75 uppercase tracking-[.13em]">Laporan Lapangan</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 1 hari lalu ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">detikHealth</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">23 Kasus Hantavirus Tersebar di 9 Provinsi, Terbanyak di DKI Jakarta</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">Peta sebaran kasus hantavirus di Indonesia menunjukkan DKI Jakarta sebagai episentrum utama. Lima kasus baru telah terdeteksi di 2026 dengan tingkat kematian 13 persen.</p>
+            </div>
+          </a>
+
+          <!-- 7 — WHO Indonesia -->
+          <a href="https://www.who.int/indonesia/news/detail/06-04-2026-who-commends-indonesia-s-leadership-in-one-health-action-to-reduce-risks-from-priority-zoonotic-diseases"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://img.antaranews.com/cache/1200x800/2026/05/08/CjkinzN000003_20260508_CBMFN0A001.jpg" alt="One Health surveillance" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/10141a/1e3040'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-cyan/75 uppercase tracking-[.13em]">One Health</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 6 Apr ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">WHO Indonesia</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">WHO Apresiasi Kepemimpinan Indonesia dalam Aksi One Health untuk Penyakit Zoonotik</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">WHO mengakui surveilans terintegrasi Indonesia atas flu burung, leptospirosis, antraks, dan rabies — diujicobakan di lima provinsi prioritas dengan pasar unggas tradisional sebagai titik deteksi dini.</p>
+            </div>
+          </a>
+
+          <!-- 8 — Kompas Health -->
+          <a href="https://health.kompas.com/read/26E09222000168/idai-sebut-campak-dan-difteri-lebih-mendesak-dari-hantavirus-ini-alasannya"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://asset.kompas.com/crops/uYhKVRoOM4NbaFICN5sMt2pDMV0=/75x50:675x450/1200x800/data/photo/2026/04/02/69cdec964fe25.jpg" alt="Campak difteri" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/12181a/203030'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-amber/75 uppercase tracking-[.13em]">Pendapat Ahli</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 1 hari lalu ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">Kompas Health</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">IDAI: Campak dan Difteri Lebih Mendesak Ditangani daripada Hantavirus</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">Ikatan Dokter Anak Indonesia menilai campak dan difteri — yang telah KLB di berbagai provinsi — jauh lebih mendesak penanganannya dibanding ancaman hantavirus saat ini.</p>
+            </div>
+          </a>
+
+          <!-- 9 — ANTARA News -->
+          <a href="https://www.antaranews.com/berita/5523913/brin-waspada-potensi-kembalinya-wabah-pes-di-indonesia"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://cdn.antaranews.com/cache/1200x800/2024/07/29/Demo-Menolak-Pengesahan-UU-Cipta-Kerja-Di-Semarang-130423-ast-1.jpg" alt="Wabah pes" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/1a1014/3d2020'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-coral/75 uppercase tracking-[.13em]">Peringatan</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 2 hari lalu ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">ANTARA News</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">BRIN: Waspadai Potensi Kembalinya Wabah Pes di Indonesia</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">Badan Riset dan Inovasi Nasional memperingatkan bahwa wabah pes berpotensi muncul kembali di Indonesia. Peningkatan populasi tikus akibat perubahan lingkungan jadi faktor risiko utama.</p>
+            </div>
+          </a>
+
+          <!-- 10 — WHO Indonesia -->
+          <a href="https://www.who.int/indonesia/news/detail/06-05-2026-towards-a-stronger-legal-framework-for-ending-neglected-tropical-diseases-in-indonesia"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://cdn.who.int/media/images/default-source/topics/diseases-and-conditions/rabies/ntd-meeting.png?sfvrsn=5ab5c1b9_5" alt="NTD meeting" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/10141a/1e3040'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-cyan/75 uppercase tracking-[.13em]">Regulasi</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 6 Mei ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">WHO Indonesia</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">Menuju Kerangka Hukum yang Lebih Kuat untuk Mengakhiri Penyakit Tropis Terabaikan di Indonesia</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">WHO mendukung Indonesia dalam mengembangkan mekanisme regulasi guna mempercepat eliminasi penyakit tropis terabaikan termasuk filariasis limfatik, kusta, dan infeksi cacing yang ditularkan melalui tanah.</p>
+            </div>
+          </a>
+
+          <!-- 11 — WHO Indonesia -->
+          <a href="https://www.who.int/indonesia/news/detail/27-03-2026-building-indonesia-s-tuberculosis-strategy-with-evidence-and-partnership"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://cdn.who.int/media/images/default-source/topics/diseases-and-conditions/tuberculosis/20260327-nsp-tb.jpeg?sfvrsn=8bee7188_5" alt="TB strategy" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/10141a/1e3040'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-cyan/75 uppercase tracking-[.13em]">Penelitian</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· 27 Mar ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">WHO Indonesia</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">Membangun Strategi Tuberkulosis Indonesia dengan Bukti dan Kemitraan</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">WHO bekerja sama dengan Indonesia untuk memperkuat strategi TB nasional, mengintegrasikan alat diagnostik baru, model perawatan berbasis komunitas, dan kemitraan lintas sektor demi mencapai target eliminasi.</p>
+            </div>
+          </a>
+
+          <!-- 12 — Kemenkes RI -->
+          <a href="https://www.antaranews.com/berita/5394698/kemenkes-terbitkan-permenkes-1-2026-guna-atasi-klb-krisis-kesehatan"
+             target="_blank" rel="noopener noreferrer"
+             class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+            <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+              <img src="https://img.antaranews.com/cache/1200x800/2026/02/04/nipah-border.jpg" alt="Permenkes" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='https://placehold.co/72x72/111a14/1f3a22'"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+                <span class="font-mono text-[8.5px] font-bold text-amber/75 uppercase tracking-[.13em]">Regulasi</span>
+                <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· Jan 2026 ·</span>
+                <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">Kemenkes RI</span>
+              </div>
+              <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">Kemenkes Terbitkan Permenkes 1/2026 untuk Atasi KLB dan Krisis Kesehatan</h5>
+              <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">Peraturan Menteri Kesehatan Nomor 1 Tahun 2026 mencakup 12 bab dan 175 pasal yang mengatur pencegahan wabah dan koordinasi lintas sektor dalam menghadapi krisis kesehatan nasional.</p>
+            </div>
+          </a>
+
+        </div><!-- end scroll -->
+      </div><!-- end relative -->
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       DUKUNG KAMI
+  ═══════════════════════════════════════════ -->
+  <section id="support" class="max-w-[1280px] mx-auto px-6 lg:px-8 mb-32 relative">
+
+    <!-- Ambient glow blobs -->
+    <div class="absolute -left-20 top-1/3 w-[480px] h-[400px] rounded-full pointer-events-none" style="background:radial-gradient(ellipse,rgba(255,95,69,.06) 0%,transparent 70%);filter:blur(80px);"></div>
+    <div class="absolute right-0 bottom-1/4 w-[360px] h-[320px] rounded-full pointer-events-none" style="background:radial-gradient(ellipse,rgba(79,209,237,.04) 0%,transparent 70%);filter:blur(90px);"></div>
+
+    <!-- Section label + headline -->
+    <div class="mb-16 reveal">
+      <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/[.06] bg-white/[.025] mb-8">
+        <span class="w-1.5 h-1.5 rounded-full bg-coral" style="animation:pulse-coral 2.4s ease-in-out infinite;"></span>
+        <span class="font-mono text-[10px] text-white/55 uppercase tracking-[.16em]">Dari Kami, Untuk Indonesia</span>
+      </div>
+      <h2 class="font-display text-[42px] sm:text-[54px] font-extrabold text-white h-tight max-w-[680px]">
+        Kami Percaya Data<br/>
+        <span style="color:rgba(255,255,255,.2);">Bisa Menyelamatkan Nyawa.</span>
+      </h2>
+      <p class="font-mono text-[10.5px] text-on-muted uppercase tracking-[.14em] mt-5">Dibuat oleh lulusan SMA yang tidak mau diam.</p>
+    </div>
+
+    <!-- Main grid -->
+    <div class="grid lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+
+      <!-- ── Left: Story ── -->
+      <div class="lg:col-span-7 reveal">
+        <div class="glass rounded-2xl p-8 lg:p-10 space-y-8" style="box-shadow:0 0 0 1px rgba(255,255,255,.06),0 24px 64px rgba(0,0,0,.45),0 4px 16px rgba(255,95,69,.04);">
+
+          <!-- Eyebrow -->
+          <div class="flex items-center gap-3">
+            <span class="font-mono text-[9px] font-bold text-coral uppercase tracking-[.2em]">VLOOB.teams</span>
+            <div class="h-px flex-1 bg-white/[.05]"></div>
+            <span class="font-mono text-[9px] text-white/20 uppercase tracking-[.12em]">Indonesia</span>
+          </div>
+
+          <!-- Narrative -->
+          <div class="space-y-6">
+            <p class="font-body text-[15.5px] text-on-surface leading-[1.82] font-light">
+              Kami adalah sekumpulan anak muda Indonesia — baru saja lulus SMA — yang melihat masalah nyata: data kesehatan publik tersebar, sulit diakses, dan tidak terhubung. Tanpa gelar, tanpa modal besar, tapi penuh tekad untuk berbuat sesuatu.
+            </p>
+            <p class="font-body text-[15.5px] text-on-surface leading-[1.82] font-light">
+              PantauSehat lahir bukan dari universitas atau modal ventura. Ia lahir dari laptop pribadi, koneksi rumah, dan keyakinan kolektif bahwa usia 18 bukan halangan untuk peduli pada kesehatan 270 juta orang Indonesia.
+            </p>
+            <p class="font-body text-[15.5px] leading-[1.82] font-light" style="color:rgba(147,143,153,.85);">
+              Jika kamu merasa platform ini berguna, satu scan QRIS sudah cukup untuk membantu kami menjaga server tetap menyala. Tidak ada nominal minimum. Tidak ada kewajiban. Hanya rasa terima kasih yang tulus dari anak-anak muda yang tidak mau diam.
+            </p>
+          </div>
+
+          <!-- Divider -->
+          <div class="h-px w-full" style="background:linear-gradient(to right,rgba(255,95,69,.3),rgba(255,95,69,.06),transparent);"></div>
+
+          <!-- Stat pills -->
+          <div class="grid grid-cols-3 gap-4">
+            <div class="text-center space-y-1.5">
+              <div class="font-display text-[30px] font-extrabold text-coral h-tight">38</div>
+              <div class="font-mono text-[8.5px] text-on-muted uppercase tracking-[.14em] leading-snug">Provinsi<br/>Dipantau</div>
+            </div>
+            <div class="text-center space-y-1.5 border-x border-white/[.05]">
+              <div class="font-display text-[30px] font-extrabold h-tight" style="color:#e7c365;">18+</div>
+              <div class="font-mono text-[8.5px] text-on-muted uppercase tracking-[.14em] leading-snug">Tahun<br/>Usia Tim</div>
+            </div>
+            <div class="text-center space-y-1.5">
+              <div class="font-display text-[30px] font-extrabold h-tight" style="color:#4fd1ed;">24/7</div>
+              <div class="font-mono text-[8.5px] text-on-muted uppercase tracking-[.14em] leading-snug">Surveilans<br/>Aktif</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Right: QRIS Panel ── -->
+      <div class="lg:col-span-5 lg:pt-6 reveal" style="transition-delay:.12s;">
+        <div class="glass-hi rounded-2xl p-7 space-y-6" style="box-shadow:0 0 0 1px rgba(255,255,255,.09),0 32px 80px rgba(0,0,0,.55),0 0 60px rgba(255,95,69,.07);">
+
+          <!-- Panel header -->
+          <div class="flex items-center justify-between">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-coral" style="animation:pulse-coral 2.4s ease-in-out infinite;"></span>
+                <span class="font-mono text-[9px] font-bold text-coral uppercase tracking-[.18em]">Donasi via QRIS</span>
+              </div>
+              <p class="font-mono text-[8.5px] uppercase tracking-[.12em]" style="color:rgba(255,255,255,.28);">Scan dengan aplikasi bank apapun</p>
+            </div>
+            <span class="material-symbols-outlined" style="font-size:22px;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24;color:rgba(255,95,69,.6);">qr_code_2</span>
+          </div>
+
+          <!-- QRIS image frame -->
+          <div class="relative">
+            <!-- Corner brackets -->
+            <div class="absolute top-0 left-0 z-10 pointer-events-none"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M1 11 L1 1 L11 1" stroke="#ff5f45" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/></svg></div>
+            <div class="absolute top-0 right-0 z-10 pointer-events-none"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 1 L21 1 L21 11" stroke="#ff5f45" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/></svg></div>
+            <div class="absolute bottom-0 left-0 z-10 pointer-events-none"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M1 11 L1 21 L11 21" stroke="#ff5f45" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/></svg></div>
+            <div class="absolute bottom-0 right-0 z-10 pointer-events-none"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M21 11 L21 21 L11 21" stroke="#ff5f45" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/></svg></div>
+            <!-- Glow ring -->
+            <div class="absolute inset-0 rounded-xl pointer-events-none" style="box-shadow:0 0 48px rgba(255,95,69,.12),inset 0 0 24px rgba(255,95,69,.04);"></div>
+            <!-- QR image -->
+            <div class="rounded-xl overflow-hidden border border-white/[.07]" style="transition:transform .7s cubic-bezier(.16,1,.3,1),box-shadow .7s cubic-bezier(.16,1,.3,1);" onmouseenter="this.style.transform='scale(1.025)';this.style.boxShadow='0 0 64px rgba(255,95,69,.2)'" onmouseleave="this.style.transform='scale(1)';this.style.boxShadow=''">
+              <img src="brand_assets/QRIS VLOOB.TEAMS.jpeg" alt="QRIS VLOOB.teams — Scan untuk berdonasi" class="w-full h-auto block" style="image-rendering:crisp-edges;"/>
+            </div>
+          </div>
+
+          <!-- Accepted wallets -->
+          <div class="flex flex-wrap gap-2 items-center">
+            <span class="font-mono text-[8px] uppercase tracking-[.1em] mr-1" style="color:rgba(255,255,255,.25);">Diterima via</span>
+            <span class="font-mono text-[8.5px] font-bold px-2.5 py-1 rounded-md border border-white/[.06] bg-white/[.025]" style="color:rgba(255,255,255,.5);">GoPay</span>
+            <span class="font-mono text-[8.5px] font-bold px-2.5 py-1 rounded-md border border-white/[.06] bg-white/[.025]" style="color:rgba(255,255,255,.5);">OVO</span>
+            <span class="font-mono text-[8.5px] font-bold px-2.5 py-1 rounded-md border border-white/[.06] bg-white/[.025]" style="color:rgba(255,255,255,.5);">Dana</span>
+            <span class="font-mono text-[8.5px] font-bold px-2.5 py-1 rounded-md border border-white/[.06] bg-white/[.025]" style="color:rgba(255,255,255,.5);">BCA</span>
+            <span class="font-mono text-[8.5px] font-bold px-2.5 py-1 rounded-md border border-white/[.06] bg-white/[.025]" style="color:rgba(255,255,255,.5);">Mandiri</span>
+            <span class="font-mono text-[8.5px]" style="color:rgba(255,255,255,.25);">& semua bank</span>
+          </div>
+
+          <!-- Step-by-step guide -->
+          <div class="space-y-3 border-t border-white/[.05] pt-5">
+            <p class="font-mono text-[8.5px] font-bold uppercase tracking-[.16em] mb-4" style="color:rgba(255,255,255,.4);">Cara Berdonasi</p>
+            <div class="flex gap-3 items-start">
+              <span class="font-mono text-[10px] font-bold w-5 flex-shrink-0 mt-0.5" style="color:rgba(255,95,69,.7);">01</span>
+              <p class="font-mono text-[10.5px] text-on-muted leading-relaxed">Buka aplikasi mobile banking atau e-wallet kamu</p>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="font-mono text-[10px] font-bold w-5 flex-shrink-0 mt-0.5" style="color:rgba(255,95,69,.7);">02</span>
+              <p class="font-mono text-[10.5px] text-on-muted leading-relaxed">Cari menu <span style="color:rgba(255,255,255,.75);font-weight:700;">Bayar</span> atau <span style="color:rgba(255,255,255,.75);font-weight:700;">Scan QR</span>, lalu arahkan kamera ke kode di atas</p>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="font-mono text-[10px] font-bold w-5 flex-shrink-0 mt-0.5" style="color:rgba(255,95,69,.7);">03</span>
+              <p class="font-mono text-[10.5px] text-on-muted leading-relaxed">Masukkan nominal bebas, konfirmasi — dan terima kasih sudah percaya pada kami</p>
+            </div>
+          </div>
+
+          <!-- Appreciation note -->
+          <div class="rounded-xl px-5 py-4 border" style="border-color:rgba(231,195,101,.14);background:rgba(231,195,101,.04);">
+            <p class="font-body text-[11.5px] leading-[1.75] font-light" style="color:rgba(231,195,101,.75);">
+              Setiap donasi — berapa pun nominalnya — membantu kami menjaga server tetap menyala dan data tetap mengalir untuk seluruh rakyat Indonesia.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════ -->
+<footer class="border-t border-white/[.034] pb-24 lg:pb-0" style="background:#070708;">
+  <div class="max-w-[1280px] mx-auto px-6 lg:px-8 py-24 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-14">
+
+    <!-- Brand -->
+    <div class="space-y-7 sm:col-span-2 lg:col-span-1">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg flex-shrink-0 border border-coral/25 bg-coral/10 flex items-center justify-center">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+            <polyline points="2,18 8,18 11,10 15,26 19,14 22,22 26,18 34,18"
+                      stroke="#ff5f45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="font-display text-[15px] font-bold text-white h-snug">PantauSehat</span>
+      </div>
+      <p class="text-[12px] text-on-muted leading-[1.85] font-light max-w-[220px]">
+        Sistem Intelijen Kesehatan Nasional yang Aman. Berdedikasi memperkuat ketahanan biologis Republik Indonesia.
+      </p>
+    </div>
+
+    <!-- Navigation -->
+    <div>
+      <h6 class="font-mono text-[9px] font-bold text-white uppercase tracking-[.2em] mb-7">Navigasi</h6>
+      <ul class="space-y-4">
+        <li><a href="#surveillance" class="font-mono text-[10.5px] text-on-muted hover:text-white transition-colors duration-200 uppercase tracking-[.12em] footer-scroll">Dashboard Nasional</a></li>
+        <li><a href="#map" class="font-mono text-[10.5px] text-on-muted hover:text-white transition-colors duration-200 uppercase tracking-[.12em] footer-scroll">Data Geografis</a></li>
+        <li><a href="#clusters" class="font-mono text-[10.5px] text-on-muted hover:text-white transition-colors duration-200 uppercase tracking-[.12em] footer-scroll">Arsip Epidemi</a></li>
+        <li><a href="#" class="font-mono text-[10.5px] text-on-muted hover:text-white transition-colors duration-200 uppercase tracking-[.12em] footer-soon">Protokol Data Terbuka</a></li>
+      </ul>
+    </div>
+
+    <!-- Resources -->
+    <div>
+      <h6 class="font-mono text-[9px] font-bold text-white uppercase tracking-[.2em] mb-7">Sumber Daya</h6>
+      <ul class="space-y-4">
+        <li><a href="#" class="font-mono text-[10.5px] text-on-muted hover:text-white transition-colors duration-200 uppercase tracking-[.12em] footer-soon">Panduan Lapangan</a></li>
+        <li><a href="#epidemiology" class="font-mono text-[10.5px] text-on-muted hover:text-white transition-colors duration-200 uppercase tracking-[.12em] footer-scroll">Ringkasan Intelijen</a></li>
+        <li><a href="#" class="font-mono text-[10.5px] text-on-muted hover:text-white transition-colors duration-200 uppercase tracking-[.12em] footer-soon">Developer API</a></li>
+        <li><a href="#epidemiology" class="font-mono text-[10.5px] text-on-muted hover:text-white transition-colors duration-200 uppercase tracking-[.12em] footer-scroll">Pusat Media</a></li>
+      </ul>
+    </div>
+
+    <!-- Crisis Response -->
+    <div>
+      <h6 class="font-mono text-[9px] font-bold text-white uppercase tracking-[.2em] mb-7">Respons Krisis</h6>
+      <div class="glass p-6 rounded-xl border-coral/[.12]">
+        <p class="font-mono text-[9px] font-bold text-coral mb-2 uppercase tracking-[.14em]">Hotline Darurat</p>
+        <p class="font-display text-[26px] font-bold text-white h-tight">112</p>
+        <p class="text-[11px] text-on-muted mt-4 font-light leading-relaxed">Jalur aman untuk pelaporan epidemiologi regional dan permintaan respons cepat.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Copyright strip -->
+  <div class="max-w-[1280px] mx-auto px-6 lg:px-8 py-7 border-t border-white/[.03] flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div class="font-mono text-[9px] text-on-muted/38 uppercase tracking-[.15em]">
+      © 2026 PantauSehat Indonesia. Infrastruktur Surveilans Resmi. &nbsp;·&nbsp; Dikerjakan oleh <span class="text-on-muted/60 hover:text-coral transition-colors duration-200 cursor-default">VLOOB.teams</span>
+    </div>
+    <div class="flex gap-7 font-mono text-[9px] text-on-muted/38 uppercase tracking-[.13em]">
+      <a href="#" class="hover:text-white transition-colors duration-200 footer-soon">Protokol Keamanan</a>
+      <a href="#" class="hover:text-white transition-colors duration-200 footer-soon">Privasi Data</a>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════
+     MOBILE BOTTOM NAV
+═══════════════════════════════════════════ -->
+<nav class="fixed bottom-0 left-0 w-full z-50 lg:hidden border-t border-white/[.05] h-[72px] px-8 flex justify-around items-center"
+     style="background:rgba(7,7,8,.82);backdrop-filter:blur(28px);">
+  <a href="#surveillance" class="flex flex-col items-center gap-1 focus-visible:outline-none">
+    <span class="material-symbols-outlined text-coral" style="font-size:24px">grid_view</span>
+    <span class="font-mono text-[8px] uppercase tracking-[.14em] font-bold text-coral">Surveilans</span>
+  </a>
+  <a href="#map" class="flex flex-col items-center gap-1 text-on-muted/40 hover:text-white transition-colors duration-200 focus-visible:outline-none">
+    <span class="material-symbols-outlined" style="font-size:24px">public</span>
+    <span class="font-mono text-[8px] uppercase tracking-[.12em]">Peta</span>
+  </a>
+  <a href="#clusters" class="flex flex-col items-center gap-1 text-on-muted/40 hover:text-white transition-colors duration-200 focus-visible:outline-none">
+    <span class="material-symbols-outlined" style="font-size:24px">notifications_active</span>
+    <span class="font-mono text-[8px] uppercase tracking-[.12em]">Peringatan</span>
+  </a>
+  <a href="#" class="flex flex-col items-center gap-1 text-on-muted/40 hover:text-white transition-colors duration-200 focus-visible:outline-none">
+    <span class="material-symbols-outlined" style="font-size:24px">person</span>
+    <span class="font-mono text-[8px] uppercase tracking-[.12em]">Profil</span>
+  </a>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════ -->
+<script>
+  // Scroll reveal via IntersectionObserver
+  const reveals = Array.from(document.querySelectorAll('.reveal'));
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: .05, rootMargin: '0px 0px -40px 0px' });
+
+  reveals.forEach((el, i) => {
+    io.observe(el);
+    // Guarantee reveal after 800ms + stagger so fullPage screenshots show content
+    setTimeout(() => el.classList.add('in'), 800 + i * 150);
+  });
+
+  // Active nav state — highlight the link whose section is nearest the top of the viewport
+  const navLinks = document.querySelectorAll('#main-nav .nav-link');
+  const sectionIds = ['surveillance', 'map', 'clusters', 'epidemiology'];
+
+  function updateActiveNav() {
+    let current = sectionIds[0];
+    const offset = 120; // account for fixed header height
+
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top <= offset) {
+        current = id;
+      }
+    });
+
+    navLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      if (href === `#${current}`) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+
+  // Set initial active state
+  updateActiveNav();
+  window.addEventListener('scroll', updateActiveNav, { passive: true });
+</script>
+
+<!-- ═══════════════════════════════════════════
+     D3 INDONESIA PROVINCE MAP
+═══════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  // ── Cluster → province filter rules ──────────────────────────────────────
+  const CLUSTER_FILTER = {
+    dengue:        { label: 'Demam Berdarah',     match: (d)       => d.disease === 'Demam Berdarah Dengue' },
+    hantavirus:    { label: 'Hantavirus',         match: (d, name) => name === 'DKI Jakarta' },
+    rabies:        { label: 'Rabies',             match: (d)       => d.disease === 'Rabies' },
+    mpox:          { label: 'Skrining Mpox',      match: (d, name) => ['DKI Jakarta','Kepulauan Riau','Sulawesi Selatan','Banten'].includes(name) },
+    malaria:       { label: 'Malaria',            match: (d)       => d.disease === 'Malaria' },
+    leptospirosis: { label: 'Leptospirosis',      match: (d)       => d.disease === 'Leptospirosis' },
+    tuberculosis:  { label: 'Tuberkulosis',       match: (d, name) => ['DKI Jakarta','Jawa Timur','Sumatera Utara','Jawa Barat','Jawa Tengah'].includes(name) },
+    chikungunya:   { label: 'Chikungunya',        match: (d, name) => ['Sulawesi Selatan','Sulawesi Tengah','Sulawesi Utara','Sulawesi Tenggara','Sulawesi Barat','Gorontalo'].includes(name) },
+  };
+
+  let activeCluster = null;
+
+  // ── Province surveillance data ────────────────────────────────────────────
+  const PROVINCE_DATA = {
+    'Aceh':                      { risk:'moderate', disease:'Malaria',                cases:45,  trend:'+3%',  pop:'5.3M',  desc:'Aktivitas malaria musiman di komunitas pegunungan. Pengendalian vektor dikerahkan di 4 kabupaten.' },
+    'Sumatera Utara':            { risk:'high',     disease:'Demam Berdarah Dengue',  cases:112, trend:'+8%',  pop:'15.4M', desc:'Penularan DBD meningkat di kawasan metropolitan Medan pascahujan lebat musiman.' },
+    'Sumatera Barat':            { risk:'moderate', disease:'Leptospirosis',          cases:28,  trend:'+1%',  pop:'5.5M',  desc:'Pemantauan pascabanjir aktif di kabupaten pesisir. Tim respons sanitasi telah dikerahkan.' },
+    'Riau':                      { risk:'low',      disease:'ISPA',                   cases:15,  trend:'-2%',  pop:'7.2M',  desc:'Klaster infeksi saluran pernapasan terkait kabut asap musiman. Peringatan kualitas udara aktif.' },
+    'Jambi':                     { risk:'normal',   disease:'Tidak Dilaporkan',       cases:3,   trend:'—',    pop:'3.5M',  desc:'Tidak ada wabah signifikan. Surveilans rutin dan kampanye vaksinasi terus berjalan.' },
+    'Sumatera Selatan':          { risk:'moderate', disease:'Demam Berdarah Dengue',  cases:67,  trend:'+5%',  pop:'8.6M',  desc:'Aktivitas DBD pada baseline musiman. Pemantauan intensif di zona perkotaan Palembang.' },
+    'Bengkulu':                  { risk:'low',      disease:'Malaria',                cases:8,   trend:'-1%',  pop:'2.0M',  desc:'Malaria menurun pascaoperasi pengendalian vektor. Pemantauan lanjutan tetap berjalan.' },
+    'Lampung':                   { risk:'moderate', disease:'Demam Berdarah Dengue',  cases:54,  trend:'+4%',  pop:'9.1M',  desc:'Lonjakan DBD di Bandar Lampung. Kampanye kesadaran masyarakat aktif di wilayah padat penduduk.' },
+    'Kepulauan Bangka Belitung': { risk:'low',      disease:'Demam Berdarah Dengue',  cases:12,  trend:'+1%',  pop:'1.5M',  desc:'Aktivitas DBD minor dalam rentang musiman. Surveilans rutin berjalan.' },
+    'Kepulauan Riau':            { risk:'low',      disease:'ISPA',                   cases:9,   trend:'0%',   pop:'2.2M',  desc:'Tidak ada wabah besar. Skrining kesehatan pelabuhan aktif di terminal feri internasional Batam.' },
+    'DKI Jakarta':               { risk:'critical', disease:'Demam Berdarah Dengue',  cases:342, trend:'+18%', pop:'10.6M', desc:'Wabah DBD kritis di Jakarta Timur dan Jakarta Utara. Tim respons darurat dikerahkan. Kapasitas RS mencapai 78% di distrik terdampak.' },
+    'Jawa Barat':                { risk:'critical', disease:'Demam Berdarah Dengue',  cases:289, trend:'+12%', pop:'49.9M', desc:'Klaster DBD besar di Bandung dan Bekasi. HFMD juga dilaporkan di klaster sekolah Bogor dan Depok.' },
+    'Jawa Tengah':               { risk:'moderate', disease:'Demam Tifoid',           cases:98,  trend:'+2%',  pop:'36.8M', desc:'Tifoid meningkat di dataran Jawa Tengah. Investigasi sanitasi air aktif di 5 kabupaten.' },
+    'DI Yogyakarta':             { risk:'moderate', disease:'Demam Berdarah Dengue',  cases:41,  trend:'+6%',  pop:'3.7M',  desc:'Pemantauan DBD aktif. Kasus terkonsentrasi di Sleman dan Bantul.' },
+    'Jawa Timur':                { risk:'high',     disease:'Leptospirosis',          cases:156, trend:'+9%',  pop:'41.1M', desc:'Wabah leptospirosis di zona pascabanjir. 156 kasus terkonfirmasi, 3 kematian dilaporkan di Jawa Timur.' },
+    'Banten':                    { risk:'high',     disease:'Demam Berdarah Dengue',  cases:134, trend:'+11%', pop:'12.7M', desc:'Penularan DBD tinggi di Tangerang dan Serang. Kasus 40% di atas baseline musiman.' },
+    'Bali':                      { risk:'moderate', disease:'Rabies',                 cases:19,  trend:'+5%',  pop:'4.4M',  desc:'Surveilans vektor rabies aktif pascainsiden gigitan anjing. Profilaksis pascapajanan didistribusikan di Gianyar.' },
+    'Nusa Tenggara Barat':       { risk:'low',      disease:'Malaria',                cases:23,  trend:'-3%',  pop:'5.5M',  desc:'Malaria menurun di NTB. Terapi kombinasi artemisinin didistribusikan ke seluruh puskesmas.' },
+    'Nusa Tenggara Timur':       { risk:'moderate', disease:'Malaria',                cases:87,  trend:'+7%',  pop:'5.4M',  desc:'Malaria meningkat di distrik terpencil NTT. Akses layanan kesehatan yang terbatas mempersulit logistik respons.' },
+    'Kalimantan Barat':          { risk:'moderate', disease:'Malaria',                cases:61,  trend:'+4%',  pop:'5.5M',  desc:'Malaria endemik di wilayah perbatasan dengan Malaysia. Protokol koordinasi kesehatan lintas batas aktif.' },
+    'Kalimantan Tengah':         { risk:'low',      disease:'ISPA',                   cases:18,  trend:'+1%',  pop:'2.7M',  desc:'Kasus pernapasan terkait kabut asap kebakaran gambut. Peringatan kualitas udara di 3 kabupaten.' },
+    'Kalimantan Selatan':        { risk:'low',      disease:'Demam Berdarah Dengue',  cases:27,  trend:'+2%',  pop:'4.3M',  desc:'DBD pada baseline musiman. Fogging rutin berjalan di kawasan metropolitan Banjarmasin.' },
+    'Kalimantan Timur':          { risk:'low',      disease:'Demam Berdarah Dengue',  cases:31,  trend:'+3%',  pop:'3.7M',  desc:'Pemantauan intensif di wilayah ibu kota baru. Surveilans DBD aktif di Balikpapan.' },
+    'Kalimantan Utara':          { risk:'normal',   disease:'Tidak Dilaporkan',       cases:4,   trend:'—',    pop:'0.7M',  desc:'Tidak ada wabah signifikan. Skrining kesehatan perbatasan rutin aktif di pos pemeriksaan Nunukan.' },
+    'Sulawesi Utara':            { risk:'low',      disease:'Demam Berdarah Dengue',  cases:21,  trend:'+2%',  pop:'2.6M',  desc:'Pemantauan DBD di kawasan perkotaan Manado. Surveilans pelabuhan aktif di terminal maritim Bitung.' },
+    'Sulawesi Tengah':           { risk:'moderate', disease:'Malaria',                cases:45,  trend:'+3%',  pop:'3.1M',  desc:'Malaria aktif di pesisir dan pegunungan Sulawesi Tengah. Kader kesehatan masyarakat dikirim ke daerah terpencil.' },
+    'Sulawesi Selatan':          { risk:'low',      disease:'Demam Berdarah Dengue',  cases:38,  trend:'0%',   pop:'9.1M',  desc:'DBD pada baseline. Otoritas kesehatan pelabuhan Makassar menjalankan operasi skrining rutin.' },
+    'Sulawesi Tenggara':         { risk:'low',      disease:'Malaria',                cases:16,  trend:'-2%',  pop:'2.7M',  desc:'Malaria menurun. Program distribusi kelambu antinyamuk baru selesai dilaksanakan.' },
+    'Gorontalo':                 { risk:'normal',   disease:'Tidak Dilaporkan',       cases:5,   trend:'—',    pop:'1.2M',  desc:'Tidak ada wabah aktif. Kampanye vaksinasi rutin dan program kesehatan masyarakat terus berjalan.' },
+    'Sulawesi Barat':            { risk:'low',      disease:'Malaria',                cases:11,  trend:'0%',   pop:'1.4M',  desc:'Aktivitas malaria stabil. Tim surveilans komunitas memantau wilayah pesisir dan pegunungan.' },
+    'Maluku':                    { risk:'moderate', disease:'Malaria',                cases:72,  trend:'+6%',  pop:'1.9M',  desc:'Malaria meningkat di kepulauan Maluku. Geografi kepulauan mempersulit logistik respons darurat.' },
+    'Maluku Utara':              { risk:'moderate', disease:'Malaria',                cases:49,  trend:'+4%',  pop:'1.3M',  desc:'Klaster malaria di Maluku Utara. Pengiriman pasokan medis dikoordinasikan melalui transportasi laut.' },
+    'Papua Barat':               { risk:'high',     disease:'Malaria',                cases:143, trend:'+14%', pop:'1.1M',  desc:'Beban malaria tinggi di Papua Barat. Komunitas terpencil dengan akses terbatas menjadi target intervensi prioritas.' },
+    'Papua':                     { risk:'high',     disease:'Malaria',                cases:198, trend:'+11%', pop:'4.3M',  desc:'Provinsi dengan beban malaria tertinggi di Indonesia. Evakuasi udara darurat aktif di 3 distrik terpencil. Tim respons cepat WHO dikerahkan.' },
+  };
+
+  const PROVINCE_KEYS = {
+    'Aceh':                      ['aceh'],
+    'Sumatera Utara':            ['sumatera utara', 'sumut', 'medan'],
+    'Sumatera Barat':            ['sumatera barat', 'sumbar', 'padang'],
+    'Riau':                      ['riau', 'pekanbaru'],
+    'Jambi':                     ['jambi'],
+    'Sumatera Selatan':          ['sumatera selatan', 'sumsel', 'palembang'],
+    'Bengkulu':                  ['bengkulu'],
+    'Lampung':                   ['lampung', 'bandar lampung'],
+    'Kepulauan Bangka Belitung': ['bangka', 'belitung'],
+    'Kepulauan Riau':            ['kepri', 'batam'],
+    'DKI Jakarta':               ['jakarta', 'dki'],
+    'Jawa Barat':                ['jawa barat', 'jabar', 'bandung', 'bekasi', 'bogor', 'depok'],
+    'Jawa Tengah':               ['jawa tengah', 'jateng', 'semarang', 'solo'],
+    'DI Yogyakarta':             ['yogyakarta', 'jogja', 'sleman', 'bantul'],
+    'Jawa Timur':                ['jawa timur', 'jatim', 'surabaya', 'malang'],
+    'Banten':                    ['banten', 'tangerang', 'serang'],
+    'Bali':                      ['bali', 'denpasar', 'gianyar'],
+    'Nusa Tenggara Barat':       ['ntb', 'lombok', 'mataram'],
+    'Nusa Tenggara Timur':       ['ntt', 'kupang', 'flores'],
+    'Kalimantan Barat':          ['kalimantan barat', 'kalbar', 'pontianak'],
+    'Kalimantan Tengah':         ['kalimantan tengah', 'kalteng', 'palangkaraya'],
+    'Kalimantan Selatan':        ['kalimantan selatan', 'kalsel', 'banjarmasin'],
+    'Kalimantan Timur':          ['kalimantan timur', 'kaltim', 'balikpapan', 'samarinda'],
+    'Kalimantan Utara':          ['kalimantan utara', 'kaltara', 'tarakan'],
+    'Sulawesi Utara':            ['sulawesi utara', 'sulut', 'manado'],
+    'Sulawesi Tengah':           ['sulawesi tengah', 'sulteng', 'palu'],
+    'Sulawesi Selatan':          ['sulawesi selatan', 'sulsel', 'makassar'],
+    'Sulawesi Tenggara':         ['sulawesi tenggara', 'sultra', 'kendari'],
+    'Gorontalo':                 ['gorontalo'],
+    'Sulawesi Barat':            ['sulawesi barat', 'sulbar', 'mamuju'],
+    'Maluku':                    ['maluku', 'ambon'],
+    'Maluku Utara':              ['maluku utara', 'ternate'],
+    'Papua Barat':               ['papua barat', 'manokwari', 'sorong'],
+    'Papua':                     ['papua', 'jayapura'],
+  };
+
+  // ── Risk visual styles ────────────────────────────────────────────────────
+  const RISK = {
+    critical: { fill:'rgba(255,95,69,.60)',   fillH:'rgba(255,95,69,.82)',  stroke:'#ff5f45',              strokeH:'#ffaa96',         badge:'#ff5f45', badgeBg:'rgba(255,95,69,.14)', badgeBdr:'rgba(255,95,69,.4)'  },
+    high:     { fill:'rgba(255,95,69,.35)',   fillH:'rgba(255,95,69,.58)',  stroke:'rgba(255,95,69,.85)',  strokeH:'#ff5f45',         badge:'#ff5f45', badgeBg:'rgba(255,95,69,.1)',  badgeBdr:'rgba(255,95,69,.3)'  },
+    moderate: { fill:'rgba(231,195,101,.45)', fillH:'rgba(231,195,101,.68)',stroke:'rgba(231,195,101,.9)', strokeH:'#e7c365',         badge:'#e7c365', badgeBg:'rgba(231,195,101,.1)',badgeBdr:'rgba(231,195,101,.3)'},
+    low:      { fill:'rgba(79,209,237,.32)',  fillH:'rgba(79,209,237,.55)', stroke:'rgba(79,209,237,.75)', strokeH:'#4fd1ed',         badge:'#4fd1ed', badgeBg:'rgba(79,209,237,.09)',badgeBdr:'rgba(79,209,237,.3)' },
+    normal:   { fill:'rgba(255,255,255,.14)', fillH:'rgba(255,255,255,.26)',stroke:'rgba(255,255,255,.42)',strokeH:'rgba(255,255,255,.65)',badge:'#938f99',badgeBg:'rgba(255,255,255,.05)',badgeBdr:'rgba(255,255,255,.18)'},
+  };
+
+  // ── Province name normaliser ──────────────────────────────────────────────
+  // Maps GeoJSON raw strings (various formats/languages) → our data keys
+  const NAME_MAP = {
+    'ACEH':'Aceh','NANGGROE ACEH DARUSSALAM':'Aceh','SUMATERA UTARA':'Sumatera Utara','NORTH SUMATRA':'Sumatera Utara',
+    'SUMATERA BARAT':'Sumatera Barat','WEST SUMATRA':'Sumatera Barat','RIAU':'Riau','JAMBI':'Jambi',
+    'SUMATERA SELATAN':'Sumatera Selatan','SOUTH SUMATRA':'Sumatera Selatan','BENGKULU':'Bengkulu','LAMPUNG':'Lampung',
+    'KEPULAUAN BANGKA BELITUNG':'Kepulauan Bangka Belitung','BANGKA BELITUNG ISLANDS':'Kepulauan Bangka Belitung',
+    'KEPULAUAN RIAU':'Kepulauan Riau','RIAU ISLANDS':'Kepulauan Riau','DKI JAKARTA':'DKI Jakarta','JAKARTA':'DKI Jakarta',
+    'JAWA BARAT':'Jawa Barat','WEST JAVA':'Jawa Barat','JAWA TENGAH':'Jawa Tengah','CENTRAL JAVA':'Jawa Tengah',
+    'DI YOGYAKARTA':'DI Yogyakarta','DAERAH ISTIMEWA YOGYAKARTA':'DI Yogyakarta','YOGYAKARTA':'DI Yogyakarta',
+    'JAWA TIMUR':'Jawa Timur','EAST JAVA':'Jawa Timur','BANTEN':'Banten','BALI':'Bali',
+    'NUSA TENGGARA BARAT':'Nusa Tenggara Barat','WEST NUSA TENGGARA':'Nusa Tenggara Barat',
+    'NUSA TENGGARA TIMUR':'Nusa Tenggara Timur','EAST NUSA TENGGARA':'Nusa Tenggara Timur',
+    'KALIMANTAN BARAT':'Kalimantan Barat','WEST KALIMANTAN':'Kalimantan Barat',
+    'KALIMANTAN TENGAH':'Kalimantan Tengah','CENTRAL KALIMANTAN':'Kalimantan Tengah',
+    'KALIMANTAN SELATAN':'Kalimantan Selatan','SOUTH KALIMANTAN':'Kalimantan Selatan',
+    'KALIMANTAN TIMUR':'Kalimantan Timur','EAST KALIMANTAN':'Kalimantan Timur',
+    'KALIMANTAN UTARA':'Kalimantan Utara','NORTH KALIMANTAN':'Kalimantan Utara',
+    'SULAWESI UTARA':'Sulawesi Utara','NORTH SULAWESI':'Sulawesi Utara',
+    'SULAWESI TENGAH':'Sulawesi Tengah','CENTRAL SULAWESI':'Sulawesi Tengah',
+    'SULAWESI SELATAN':'Sulawesi Selatan','SOUTH SULAWESI':'Sulawesi Selatan',
+    'SULAWESI TENGGARA':'Sulawesi Tenggara','SOUTHEAST SULAWESI':'Sulawesi Tenggara',
+    'GORONTALO':'Gorontalo','SULAWESI BARAT':'Sulawesi Barat','WEST SULAWESI':'Sulawesi Barat',
+    'MALUKU':'Maluku','MALUKU UTARA':'Maluku Utara','NORTH MALUKU':'Maluku Utara',
+    'PAPUA BARAT':'Papua Barat','WEST PAPUA':'Papua Barat','PAPUA':'Papua',
+    // GADM NAME_1 variants
+    'Nanggroe Aceh Darussalam':'Aceh','Bangka-Belitung':'Kepulauan Bangka Belitung','Bangka Belitung':'Kepulauan Bangka Belitung',
+    'Daerah Istimewa Yogyakarta':'DI Yogyakarta','Jakarta Raya':'DKI Jakarta','North Sumatra':'Sumatera Utara',
+    'West Sumatra':'Sumatera Barat','South Sumatra':'Sumatera Selatan','West Java':'Jawa Barat',
+    'Central Java':'Jawa Tengah','East Java':'Jawa Timur','West Kalimantan':'Kalimantan Barat',
+    'Central Kalimantan':'Kalimantan Tengah','South Kalimantan':'Kalimantan Selatan','East Kalimantan':'Kalimantan Timur',
+    'North Kalimantan':'Kalimantan Utara','North Sulawesi':'Sulawesi Utara','Central Sulawesi':'Sulawesi Tengah',
+    'South Sulawesi':'Sulawesi Selatan','Southeast Sulawesi':'Sulawesi Tenggara','West Sulawesi':'Sulawesi Barat',
+    'North Maluku':'Maluku Utara','West Papua':'Papua Barat','West Nusa Tenggara':'Nusa Tenggara Barat',
+    'East Nusa Tenggara':'Nusa Tenggara Timur','Riau Islands':'Kepulauan Riau',
+  };
+
+  function normalizeName(raw) {
+    if (!raw) return '';
+    const upper = raw.toString().trim().toUpperCase();
+    if (NAME_MAP[upper]) return NAME_MAP[upper];
+    // Try title-case lookup
+    const title = raw.toString().trim();
+    if (NAME_MAP[title]) return NAME_MAP[title];
+    return title;
+  }
+
+  function getFeatureName(props) {
+    const raw = props.state || props.Propinsi || props.NAME_1 || props.name || props.NAME || props.ADM1_EN || '';
+    return normalizeName(raw);
+  }
+
+  // ── Outbreak markers (accurate lat/lng of provincial capitals) ─────────────
+  const MARKERS = [
+    { name:'DKI Jakarta',   lat:-6.2088,  lng:106.8456, risk:'critical' },
+    { name:'Jawa Barat',    lat:-6.9175,  lng:107.6191, risk:'critical' },
+    { name:'Jawa Timur',    lat:-7.2458,  lng:112.7381, risk:'high'     },
+    { name:'Banten',        lat:-6.1282,  lng:106.1502, risk:'high'     },
+    { name:'Papua',         lat:-2.5337,  lng:140.7178, risk:'high'     },
+    { name:'Papua Barat',   lat:-1.3361,  lng:133.1747, risk:'high'     },
+    { name:'Sumatera Utara',lat:3.5952,   lng:98.6722,  risk:'high'     },
+    { name:'Jawa Tengah',   lat:-7.1507,  lng:110.1403, risk:'moderate' },
+    { name:'Maluku',        lat:-3.6954,  lng:128.1814, risk:'moderate' },
+    { name:'Nusa Tenggara Timur',lat:-8.6574,lng:121.0794,risk:'moderate'},
+  ];
+
+  const MARKER_COLOR = { critical:'#ff5f45', high:'#ff5f45', moderate:'#e7c365', low:'#4fd1ed' };
+  const MARKER_R     = { critical:5.5, high:4.5, moderate:3.5, low:3 };
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────
+  const card       = document.getElementById('map-card');
+  const svgEl      = document.getElementById('indonesia-map');
+  const loadingEl  = document.getElementById('map-loading');
+  const errorEl    = document.getElementById('map-error');
+  const retryBtn   = document.getElementById('map-retry');
+  const panel      = document.getElementById('province-panel');
+  const tooltip    = document.getElementById('map-tooltip');
+  const tooltipTxt = document.getElementById('tooltip-name');
+
+  // ── Load + render ─────────────────────────────────────────────────────────
+  async function loadMap() {
+    loadingEl.classList.remove('hidden');
+    errorEl.classList.add('hidden');
+    svgEl.style.display = 'none';
+
+    let geojson;
+    const SOURCES = [
+      'https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-en.geojson',
+      'https://raw.githubusercontent.com/ans-4175/peta-indonesia-geojson/master/indonesia-province-simple.geojson',
+    ];
+
+    for (const url of SOURCES) {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+        if (!res.ok) continue;
+        geojson = await res.json();
+        break;
+      } catch (_) { /* try next */ }
+    }
+
+    if (!geojson) {
+      loadingEl.classList.add('hidden');
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    renderMap(geojson);
+  }
+
+  function renderMap(geojson) {
+    const W = card.clientWidth  || 900;
+    const H = card.clientHeight || 560;
+
+    const svg = d3.select(svgEl);
+    svg.selectAll('*').remove();
+
+    // Dark background + subtle dot-grid overlay
+    const defs = svg.append('defs');
+    defs.append('pattern')
+      .attr('id','dotpat').attr('width',28).attr('height',28).attr('patternUnits','userSpaceOnUse')
+      .append('circle').attr('cx',14).attr('cy',14).attr('r',.9).style('fill','rgba(255,255,255,.05)');
+
+    svg.append('rect').attr('width','100%').attr('height','100%').style('fill','#080810');
+    svg.append('rect').attr('width','100%').attr('height','100%').style('fill','url(#dotpat)');
+
+    // Projection — fit to Indonesia's known bounding box instead of the geojson
+    // (some sub-polygons in this GeoJSON have winding-order issues that cause
+    //  geoPath.bounds() to return the full world extent, which breaks fitExtent)
+    const INDONESIA_BBOX = {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[[94, -12], [94, 7], [142, 7], [142, -12], [94, -12]]]
+      }
+    };
+    const projection = d3.geoMercator().fitExtent([[24, 24], [W - 24, H - 24]], INDONESIA_BBOX);
+    const pathGen    = d3.geoPath().projection(projection);
+
+    // Remove sub-polygons that have anomalous projected bounds (winding-order artifacts).
+    // A valid island polygon should never span more than ~30% of the SVG area.
+    const maxArea = (W - 48) * (H - 48) * 0.30;
+    function cleanFeature(f) {
+      if (f.geometry.type !== 'MultiPolygon') return f;
+      const good = f.geometry.coordinates.filter(poly => {
+        const b = pathGen.bounds({ type: 'Feature', geometry: { type: 'Polygon', coordinates: poly } });
+        return (b[1][0] - b[0][0]) * (b[1][1] - b[0][1]) < maxArea;
+      });
+      return { ...f, geometry: { ...f.geometry, coordinates: good } };
+    }
+    const cleanGeojson = { ...geojson, features: geojson.features.map(cleanFeature) };
+
+    // Main group (receives zoom transform)
+    const g = svg.append('g').attr('class','map-g');
+
+    // Zoom behaviour
+    let currentK = 1;
+    const zoom = d3.zoom()
+      .scaleExtent([1, 14])
+      .translateExtent([[-W * .4, -H * .4], [W * 1.4, H * 1.4]])
+      .on('zoom', ev => {
+        currentK = ev.transform.k;
+        g.attr('transform', ev.transform);
+        g.selectAll('.province').style('stroke-width', (1.5 / currentK) + 'px');
+        svgEl.style.cursor = 'grabbing';
+      })
+      .on('end', () => { svgEl.style.cursor = 'grab'; });
+
+    svg.call(zoom);
+
+    // ── Draw provinces ──────────────────────────────────────────────────────
+    g.selectAll('.province')
+      .data(cleanGeojson.features)
+      .enter().append('path')
+      .attr('class', 'province')
+      .attr('data-province', d => getFeatureName(d.properties))
+      .attr('d', pathGen)
+      .style('fill',         d => RISK[getRisk(d)].fill)
+      .style('stroke',       d => RISK[getRisk(d)].stroke)
+      .style('stroke-width', '1.5px')
+      .style('cursor', 'pointer')
+      .on('mouseenter', function (ev, d) {
+        const r = getRisk(d);
+        d3.select(this).style('fill', RISK[r].fillH).style('stroke', RISK[r].strokeH);
+        const name = getFeatureName(d.properties);
+        if (name) showTooltip(ev, name);
+      })
+      .on('mousemove', ev => moveTooltip(ev))
+      .on('mouseleave', function (_, d) {
+        const r = getRisk(d);
+        d3.select(this).style('fill', RISK[r].fill).style('stroke', RISK[r].stroke);
+        hideTooltip();
+      })
+      .on('click', function (ev, d) {
+        ev.stopPropagation();
+        const name = getFeatureName(d.properties);
+        openPanel(name);
+      });
+
+    // ── Outbreak markers ────────────────────────────────────────────────────
+    MARKERS.forEach((m, i) => {
+      const [px, py] = projection([m.lng, m.lat]);
+      if (!px || !py) return;
+      const color = MARKER_COLOR[m.risk] || '#938f99';
+      const baseR = MARKER_R[m.risk]  || 3;
+
+      // Pulsing ring
+      const ring = g.append('circle')
+        .attr('cx', px).attr('cy', py)
+        .attr('r', baseR * 0.8)
+        .attr('data-marker', m.name)
+        .style('fill', 'none')
+        .style('stroke', color)
+        .style('stroke-width', .8)
+        .style('pointer-events', 'none');
+
+      function pulse() {
+        ring.attr('r', baseR * 0.8).style('opacity', .55)
+          .transition().delay(i * 280).duration(2200).ease(d3.easeExpOut)
+          .attr('r', baseR * 3.8).style('opacity', 0)
+          .on('end', pulse);
+      }
+      pulse();
+
+      // Centre dot
+      g.append('circle')
+        .attr('cx', px).attr('cy', py)
+        .attr('r', baseR)
+        .attr('data-marker', m.name)
+        .style('fill', color)
+        .style('cursor', 'pointer')
+        .style('filter', `drop-shadow(0 0 ${baseR + 1}px ${color})`)
+        .on('click', ev => { ev.stopPropagation(); openPanel(m.name); })
+        .on('mouseenter', ev => showTooltip(ev, m.name))
+        .on('mousemove',  ev => moveTooltip(ev))
+        .on('mouseleave', () => hideTooltip());
+    });
+
+    // Click on empty area → close panel
+    svg.on('click', () => closePanel());
+
+    // Zoom control buttons
+    document.getElementById('map-zoom-in').onclick    = () => svg.transition().duration(280).call(zoom.scaleBy, 1.85);
+    document.getElementById('map-zoom-out').onclick   = () => svg.transition().duration(280).call(zoom.scaleBy, 1 / 1.85);
+    document.getElementById('map-zoom-reset').onclick = () => svg.transition().duration(380).call(zoom.transform, d3.zoomIdentity);
+
+    // Show map
+    loadingEl.classList.add('hidden');
+    svgEl.style.display = 'block';
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function getRisk(feature) {
+    const name = getFeatureName(feature.properties);
+    return (PROVINCE_DATA[name] || {}).risk || 'normal';
+  }
+
+  function showTooltip(ev, name) {
+    tooltipTxt.textContent = name;
+    const [mx, my] = d3.pointer(ev, card);
+    tooltip.style.transform = `translate(${mx + 14}px, ${my - 38}px)`;
+    tooltip.style.opacity   = '1';
+  }
+  function moveTooltip(ev) {
+    const [mx, my] = d3.pointer(ev, card);
+    tooltip.style.transform = `translate(${mx + 14}px, ${my - 38}px)`;
+  }
+  function hideTooltip() { tooltip.style.opacity = '0'; }
+
+  // ── Province intel panel ──────────────────────────────────────────────────
+  function openPanel(name) {
+    const d = PROVINCE_DATA[name] || { risk:'normal', disease:'Tidak Ada Data', cases:'—', trend:'—', pop:'—', desc:'Tidak ada data surveilans tersedia untuk provinsi ini.' };
+    const s = RISK[d.risk];
+
+    const badge = document.getElementById('panel-badge');
+    const riskLabels = { critical:'Kritis', high:'Tinggi', moderate:'Sedang', low:'Rendah', normal:'Normal' };
+    badge.textContent        = riskLabels[d.risk] || d.risk;
+    badge.style.color        = s.badge;
+    badge.style.background   = s.badgeBg;
+    badge.style.borderColor  = s.badgeBdr;
+
+    document.getElementById('panel-name').textContent    = name;
+    document.getElementById('panel-disease').textContent = d.disease;
+    document.getElementById('panel-cases').textContent   = d.cases;
+    document.getElementById('panel-pop').textContent     = d.pop;
+    document.getElementById('panel-desc').textContent    = d.desc;
+
+    const trendEl = document.getElementById('panel-trend');
+    trendEl.textContent   = d.trend;
+    trendEl.style.color   = d.trend && d.trend.startsWith('+') ? '#ff5f45' : '#4fd1ed';
+
+    panel.style.transform      = 'translateY(0)';
+    panel.style.pointerEvents  = 'auto';
+
+    const keys = PROVINCE_KEYS[name] || [name.toLowerCase()];
+    let related = allArticles.filter(a => {
+      const t = ((a.title || '') + ' ' + (a.description || '')).toLowerCase();
+      return keys.some(k => t.includes(k));
+    }).slice(0, 3);
+
+    // Fallback: tampilkan berita berdasarkan penyakit provinsi
+    if (!related.length && d.disease && d.disease !== 'Tidak Dilaporkan') {
+      const diseaseKeys = {
+        'Demam Berdarah Dengue': ['dengue', 'dbd', 'demam berdarah', 'aedes'],
+        'Malaria':               ['malaria', 'plasmodium'],
+        'Leptospirosis':         ['leptospirosis'],
+        'Demam Tifoid':          ['tifoid', 'typhoid', 'tipes'],
+        'ISPA':                  ['ispa', 'pneumonia', 'pernapasan'],
+        'Rabies':                ['rabies'],
+      };
+      const dk = diseaseKeys[d.disease] || [d.disease.toLowerCase()];
+      related = allArticles.filter(a => {
+        const t = ((a.title || '') + ' ' + (a.description || '')).toLowerCase();
+        return dk.some(k => t.includes(k));
+      }).slice(0, 3);
+    }
+
+    const wrap = document.getElementById('panel-news-wrap');
+    const newsEl = document.getElementById('panel-news');
+    if (related.length) {
+      newsEl.innerHTML = related.map(panelNewsHTML).join('');
+      wrap.style.display = 'block';
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
+
+  function closePanel() {
+    panel.style.transform     = 'translateY(100%)';
+    panel.style.pointerEvents = 'none';
+  }
+
+  document.getElementById('panel-close').addEventListener('click', ev => { ev.stopPropagation(); closePanel(); });
+  retryBtn.addEventListener('click', loadMap);
+
+  // ── Map filter (called by cluster cards) ──────────────────────────────────
+  function applyFilter() {
+    const filterBanner = document.getElementById('map-filter-banner');
+    const filterLabel  = document.getElementById('map-filter-label');
+    const cf = activeCluster ? CLUSTER_FILTER[activeCluster] : null;
+
+    // Province paths
+    d3.selectAll('.province').each(function(d) {
+      const name = getFeatureName(d.properties);
+      const data = PROVINCE_DATA[name] || {};
+      const r    = getRisk(d);
+      if (!cf || cf.match(data, name)) {
+        d3.select(this)
+          .style('fill',    RISK[r].fill)
+          .style('stroke',  RISK[r].stroke)
+          .style('opacity', 1);
+      } else {
+        d3.select(this)
+          .style('fill',    'rgba(255,255,255,0.03)')
+          .style('stroke',  'rgba(255,255,255,0.07)')
+          .style('opacity', 1);
+      }
+    });
+
+    // Markers
+    d3.selectAll('[data-marker]').each(function() {
+      const name = this.getAttribute('data-marker');
+      const data = PROVINCE_DATA[name] || {};
+      const matches = !cf || cf.match(data, name);
+      d3.select(this).style('opacity', matches ? 1 : 0);
+    });
+
+    // Banner
+    if (cf) {
+      filterLabel.textContent = cf.label;
+      filterBanner.classList.remove('hidden');
+    } else {
+      filterBanner.classList.add('hidden');
+    }
+  }
+
+  document.getElementById('map-filter-clear').addEventListener('click', () => {
+    activeCluster = null;
+    applyFilter();
+    document.querySelectorAll('.cluster-card').forEach(c => {
+      c.style.opacity = '';
+      c.style.outline = '';
+    });
+  });
+
+  window.activateClusterFilter = function(key) {
+    activeCluster = (activeCluster === key) ? null : key;
+    applyFilter();
+
+    // Card active states
+    document.querySelectorAll('.cluster-card').forEach(c => {
+      if (!activeCluster) {
+        c.style.opacity = '';
+        c.style.outline = '';
+      } else if (c.dataset.cluster === activeCluster) {
+        c.style.opacity = '1';
+        c.style.outline = '1px solid rgba(255,255,255,0.25)';
+      } else {
+        c.style.opacity = '0.38';
+        c.style.outline = '';
+      }
+    });
+
+    if (activeCluster) {
+      document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // ── Boot ──────────────────────────────────────────────────────────────────
+  if (typeof d3 !== 'undefined') {
+    loadMap();
+  } else {
+    document.querySelector('script[src*="d3"]').addEventListener('load', loadMap);
+  }
+
+  window.openPanel      = openPanel;
+  window.PROVINCE_DATA  = PROVINCE_DATA;
+})();
+</script>
+
+<script>
+  document.querySelectorAll('.cluster-card').forEach(card => {
+    card.addEventListener('click', () => {
+      if (typeof window.activateClusterFilter === 'function') {
+        window.activateClusterFilter(card.dataset.cluster);
+      }
+    });
+  });
+</script>
+
+<!-- ═══════════════════════════════════════════
+     LIVE DATA ENGINE — Supabase powered
+     Berita & statistik diperbarui otomatis tiap jam
+     oleh Edge Function di Supabase
+═══════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  const SB_URL = 'https://yxpsgidkczgdmabbwqcp.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cHNnaWRrY3pnZG1hYmJ3cWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDk1MzcsImV4cCI6MjA5Mzk4NTUzN30.V2qqUaC8OoYsM2ThTEW8FgaA0XRzNQ2_-Lh65-Oj2Ho';
+  const HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
+
+  const CACHE_KEY = 'ps_sb_v1';
+  const CACHE_TTL = 60 * 60 * 1000; // 1 jam
+
+  // ── Cache localStorage ────────────────────────────────────────
+  function cacheLoad() {
+    try {
+      const r = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+      return r && (Date.now() - r.ts < CACHE_TTL) ? r : null;
+    } catch { return null; }
+  }
+  function cacheSave(data) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), ...data })); } catch {}
+  }
+
+  // ── Fetch dari Supabase ───────────────────────────────────────
+  async function sbGet(path) {
+    const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+      headers: HEADERS,
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) throw new Error(`Supabase ${res.status}`);
+    return res.json();
+  }
+
+  // ── Render statistik nasional ─────────────────────────────────
+  function applyStats(s) {
+    const el = id => document.getElementById(id);
+    if (!s) return;
+    if (el('stat-total'))     el('stat-total').textContent    = Number(s.total_alerts).toLocaleString('id-ID');
+    if (el('stat-pct'))       el('stat-pct').textContent      = `${s.change_up ? '+' : '-'}${s.change_pct}%`;
+    if (el('stat-today'))     el('stat-today').textContent    = s.today_cases;
+    if (el('stat-provinces')) el('stat-provinces').innerHTML  =
+      `${s.active_provinces}<span class="text-base font-normal text-on-muted/55"> / 38</span>`;
+    if (el('stat-dengue'))    el('stat-dengue').textContent   = `↑ ${s.primary_disease_rate}% Angka Insiden`;
+  }
+
+  // ── Render artikel berita ─────────────────────────────────────
+  function timeAgo(str) {
+    if (!str) return '—';
+    const min = Math.floor((Date.now() - new Date(str)) / 60000);
+    if (min < 2)  return 'baru saja';
+    if (min < 60) return `${min} menit lalu`;
+    const h = Math.floor(min / 60);
+    if (h < 24)   return `${h} jam lalu`;
+    return `${Math.floor(h / 24)} hari lalu`;
+  }
+
+  let allArticles = [];
+
+  function panelNewsHTML(a) {
+    const cls = { coral:'text-coral/75', cyan:'text-cyan/75', amber:'text-amber/75' };
+    const c = cls[a.color] || 'text-coral/75';
+    return `
+<a href="${a.link}" target="_blank" rel="noopener noreferrer"
+   class="block glass px-3 py-2 rounded-xl group no-underline hover:shadow-[0_0_16px_rgba(255,95,69,.07)] transition-shadow duration-300">
+  <div class="flex items-center gap-2 mb-1">
+    <span class="font-mono text-[7.5px] font-bold ${c} uppercase tracking-[.12em]">${a.tag}</span>
+    <span class="font-mono text-[7.5px] text-white/20 uppercase">· ${timeAgo(a.pub_date)}</span>
+  </div>
+  <p class="text-[11px] font-display font-bold text-white leading-snug group-hover:text-coral transition-colors duration-200 line-clamp-2">${a.title}</p>
+</a>`;
+  }
+
+  function articleHTML(a) {
+    const cls = { coral:'text-coral/75', cyan:'text-cyan/75', amber:'text-amber/75' };
+    const c   = cls[a.color] || 'text-coral/75';
+    const img = a.thumbnail || 'https://placehold.co/72x72/1a1014/3d2020';
+    const desc = (a.description || '').slice(0, 180) + (a.description?.length > 180 ? '…' : '');
+    return `
+<a href="${a.link}" target="_blank" rel="noopener noreferrer"
+   class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+  <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+    <img src="${img}" alt="" class="w-full h-full object-cover opacity-80 img-zoom"
+         onerror="this.src='https://placehold.co/72x72/1a1014/3d2020'"/>
+    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+  </div>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+      <span class="font-mono text-[8.5px] font-bold ${c} uppercase tracking-[.13em]">${a.tag}</span>
+      <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· ${timeAgo(a.pub_date)} ·</span>
+      <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">${a.source}</span>
+    </div>
+    <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">${a.title}</h5>
+    <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">${desc}</p>
+  </div>
+</a>`;
+  }
+
+  function stampNow() {
+    const el = document.getElementById('briefings-updated');
+    if (!el) return;
+    const t = new Date().toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+    el.textContent = `Diperbarui ${t} WIB`;
+  }
+
+  function renderFeed(articles) {
+    const feed = document.getElementById('briefings-feed');
+    if (!feed || !articles.length) return;
+    feed.innerHTML = articles.map(articleHTML).join('');
+    stampNow();
+  }
+
+  // ── Load semua data dari Supabase ─────────────────────────────
+  async function loadAll(force) {
+    // Gunakan cache jika masih valid
+    if (!force) {
+      const cached = cacheLoad();
+      if (cached) {
+        applyStats(cached.stats);
+        allArticles = cached.articles || [];
+        renderFeed(allArticles);
+        return;
+      }
+    }
+
+    try {
+      const [statsArr, articles] = await Promise.all([
+        sbGet('national_stats?id=eq.1&limit=1'),
+        sbGet('briefings?order=pub_date.desc&limit=50'),
+      ]);
+
+      const stats = statsArr?.[0] || null;
+      applyStats(stats);
+      allArticles = articles || [];
+      if (allArticles.length) renderFeed(allArticles);
+      else stampNow();
+
+      cacheSave({ stats, articles: allArticles });
+    } catch (err) {
+      console.warn('Supabase fetch gagal, menggunakan fallback:', err);
+      stampNow();
+    }
+  }
+
+  // ── Tabel Provinsi — generate + search ───────────────────────
+  (function() {
+    const riskCfg = {
+      critical: { label:'Kritis',  cls:'text-coral',      icon:'north_east', iconCls:'text-coral' },
+      high:     { label:'Tinggi',  cls:'text-coral/70',   icon:'north_east', iconCls:'text-coral/70' },
+      moderate: { label:'Sedang',  cls:'text-amber',      icon:'north_east', iconCls:'text-amber/70' },
+      low:      { label:'Rendah',  cls:'text-cyan',       icon:'south_east', iconCls:'text-cyan/60' },
+      normal:   { label:'Normal',  cls:'text-white/35',   icon:'east',       iconCls:'text-white/25' },
+    };
+
+    function trendIcon(trend) {
+      if (!trend || trend === '—') return 'east';
+      if (trend.startsWith('+'))   return 'north_east';
+      if (trend.startsWith('-'))   return 'south_east';
+      return 'east';
+    }
+
+    function rowHTML(name, d) {
+      const r = riskCfg[d.risk] || riskCfg.normal;
+      const isCls = trendIcon(d.trend) === 'north_east' ? 'text-coral/70'
+                  : trendIcon(d.trend) === 'south_east' ? 'text-cyan/50'
+                  : 'text-white/25';
+      return `<tr class="hover:bg-white/[.018] transition-colors duration-150 cursor-pointer province-row"
+                  data-name="${name}" onclick="(function(){const e=new CustomEvent('openProvince',{detail:'${name}'});document.dispatchEvent(e)})()">
+        <td class="px-6 py-4 text-sm font-medium text-white">${name}</td>
+        <td class="px-6 py-4"><span class="font-mono text-[10.5px] font-bold ${r.cls} uppercase tracking-wider">${r.label}</span></td>
+        <td class="px-6 py-4 ${isCls}"><span class="material-symbols-outlined" style="font-size:16px">${trendIcon(d.trend)}</span></td>
+      </tr>`;
+    }
+
+    const tbody = document.getElementById('province-tbody');
+    const empty = document.getElementById('province-empty');
+    const search = document.getElementById('province-search');
+    if (!tbody || !search) return;
+
+    // Generate semua 34 baris
+    const PD = window.PROVINCE_DATA || {};
+    const allRows = Object.entries(PD)
+      .sort((a, b) => {
+        const order = { critical:0, high:1, moderate:2, low:3, normal:4 };
+        return (order[a[1].risk] ?? 5) - (order[b[1].risk] ?? 5);
+      });
+
+    tbody.innerHTML = allRows.map(([name, d]) => rowHTML(name, d)).join('');
+
+    // Search filter
+    search.addEventListener('input', () => {
+      const q = search.value.toLowerCase().trim();
+      let visible = 0;
+      tbody.querySelectorAll('tr.province-row').forEach(tr => {
+        const name = tr.dataset.name.toLowerCase();
+        const show = !q || name.includes(q);
+        tr.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      empty.style.display = visible === 0 ? 'block' : 'none';
+    });
+
+    // Klik baris → buka panel peta
+    document.addEventListener('openProvince', e => {
+      const mapSection = document.getElementById('map');
+      if (mapSection) mapSection.scrollIntoView({ behavior:'smooth' });
+      setTimeout(() => window.openPanel && window.openPanel(e.detail), 600);
+    });
+  })();
+
+  // ── Boot ─────────────────────────────────────────────────────
+  loadAll(false);
+
+  // Auto-refresh tiap 1 jam
+  setInterval(() => loadAll(true), 60 * 60 * 1000);
+
+  // Refresh saat tab aktif kembali & cache kadaluarsa
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && !cacheLoad()) loadAll(true);
+  });
+
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER NAV + TOAST
+═══════════════════════════════════════════ -->
+<div id="footer-toast" style="
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:#1a1a1f;border:1px solid rgba(255,95,69,.18);color:#fff;
+  font-family:monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  padding:10px 20px;border-radius:8px;opacity:0;pointer-events:none;z-index:9999;
+  transition:opacity .22s ease,transform .22s ease;white-space:nowrap;
+  box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(255,95,69,.06);
+"></div>
+
+<script>
+(function(){
+  /* Excel Export */
+  var exportBtn = document.getElementById('btn-export-csv');
+  if(exportBtn){
+    exportBtn.addEventListener('click', function(){
+      if(typeof PROVINCE_DATA === 'undefined' || typeof XLSX === 'undefined') return;
+
+      var RISK_LABEL = { critical:'Kritis', high:'Tinggi', moderate:'Sedang', low:'Rendah', normal:'Normal' };
+      var RISK_COLOR = { critical:'FFDC2626', high:'FFEA580C', moderate:'FFF59E0B', low:'FF22C55E', normal:'FF6B7280' };
+
+      /* Build rows */
+      var rows = Object.entries(PROVINCE_DATA).map(function(entry){
+        var name = entry[0], d = entry[1];
+        return {
+          'Provinsi':        name,
+          'Tingkat Risiko':  RISK_LABEL[d.risk] || d.risk,
+          'Penyakit Utama':  d.disease,
+          'Jumlah Kasus':    d.cases,
+          'Tren':            d.trend,
+          'Populasi':        d.pop,
+          'Keterangan':      d.desc || ''
+        };
+      });
+
+      var wb = XLSX.utils.book_new();
+      var ws = XLSX.utils.json_to_sheet(rows);
+
+      /* Column widths */
+      ws['!cols'] = [
+        { wch: 28 }, { wch: 16 }, { wch: 28 },
+        { wch: 14 }, { wch: 10 }, { wch: 10 }, { wch: 70 }
+      ];
+
+      /* Header style */
+      var headerKeys = ['A1','B1','C1','D1','E1','F1','G1'];
+      headerKeys.forEach(function(key){
+        if(!ws[key]) return;
+        ws[key].s = {
+          font:    { bold: true, color: { rgb: 'FFFFFFFF' } },
+          fill:    { fgColor: { rgb: 'FF0F0F10' } },
+          alignment: { horizontal: 'center' }
+        };
+      });
+
+      /* Risk color per row */
+      var range = XLSX.utils.decode_range(ws['!ref']);
+      for(var R = range.s.r + 1; R <= range.e.r; R++){
+        var riskCell = ws[XLSX.utils.encode_cell({ r: R, c: 1 })];
+        if(!riskCell) continue;
+        var riskKey = Object.keys(RISK_LABEL).find(function(k){ return RISK_LABEL[k] === riskCell.v; });
+        var color = RISK_COLOR[riskKey] || 'FF374151';
+        riskCell.s = { font: { bold: true, color: { rgb: color } } };
+      }
+
+      /* Freeze header row */
+      ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Data Surveilans');
+
+      /* Metadata sheet */
+      var meta = XLSX.utils.aoa_to_sheet([
+        ['PantauSehat — Data Surveilans Nasional'],
+        ['Tanggal Ekspor', new Date().toLocaleDateString('id-ID', { dateStyle:'long' })],
+        ['Sumber', 'PantauSehat Indonesia — Infrastruktur Surveilans Resmi'],
+        ['Total Provinsi', rows.length],
+        [],
+        ['Keterangan Tingkat Risiko'],
+        ['Kritis',  'Situasi darurat, respons segera diperlukan'],
+        ['Tinggi',  'Peningkatan signifikan, pemantauan intensif'],
+        ['Sedang',  'Di atas baseline, waspadai perkembangan'],
+        ['Rendah',  'Di bawah threshold, surveilans rutin'],
+        ['Normal',  'Tidak ada wabah signifikan'],
+      ]);
+      meta['!cols'] = [{ wch: 20 }, { wch: 55 }];
+      XLSX.utils.book_append_sheet(wb, meta, 'Informasi');
+
+      XLSX.writeFile(wb, 'PantauSehat_Surveilans_' + new Date().toISOString().slice(0,10) + '.xlsx');
+
+      /* Feedback visual */
+      exportBtn.textContent = 'Berhasil Diunduh ✓';
+      exportBtn.style.color = '#4ade80';
+      setTimeout(function(){
+        exportBtn.textContent = 'Ekspor Data Analisis';
+        exportBtn.style.color = '';
+      }, 2500);
+    });
+  }
+
+  /* Smooth scroll for footer links */
+  document.querySelectorAll('.footer-scroll').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var target = document.querySelector(this.getAttribute('href'));
+      if(!target) return;
+      var top = target.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: top, behavior: 'smooth' });
+    });
+  });
+
+  /* "Segera Hadir" toast for unfinished links */
+  var toast = document.getElementById('footer-toast');
+  var toastTimer;
+  document.querySelectorAll('.footer-soon').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      toast.textContent = 'Segera Hadir';
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function(){
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(12px)';
+      }, 2200);
+    });
+  });
+})();
+</script>
+
+<!-- ── Onboarding logic ── -->
+<script>
+var _obReady = false;
+var _obDone  = false;
+
+(function() {
+  var overlay = document.getElementById('onboarding-overlay');
+  if (!overlay) return;
+
+  if (localStorage.getItem('ps_onboarded') === '1') {
+    overlay.style.display = 'none';
+    _obDone = true;
+    return;
+  }
+
+  // Force visible and keep enforcing every 50ms until user dismisses
+  function _obEnforce() {
+    overlay.style.setProperty('display',    'flex',    'important');
+    overlay.style.setProperty('opacity',    '1',       'important');
+    overlay.style.setProperty('visibility', 'visible', 'important');
+  }
+  _obEnforce();
+  var _obTick = setInterval(function() {
+    if (_obDone) { clearInterval(_obTick); return; }
+    _obEnforce();
+  }, 50);
+
+  document.body.style.overflow = 'hidden';
+  setTimeout(function() { _obReady = true; }, 1500);
+
+  setTimeout(function() {
+    var bc  = document.getElementById('ob-blob-coral');
+    var bcy = document.getElementById('ob-blob-cyan');
+    if (bc)  bc.style.transform  = 'translate(0,0)';
+    if (bcy) bcy.style.transform = 'translate(0,0)';
+  }, 80);
+
+  var hl = document.getElementById('ob-headline');
+  var txt = 'Pusat Intelijen Kesehatan Nasional';
+  var idx = 0;
+  setTimeout(function typewrite() {
+    if (idx <= txt.length) {
+      hl.textContent = txt.slice(0, idx);
+      idx++;
+      setTimeout(typewrite, idx < 7 ? 90 : idx < 12 ? 55 : 42);
+    }
+  }, 650);
+})();
+
+function obGoSlide2() {
+  var s1 = document.getElementById('ob-slide-1');
+  var s2 = document.getElementById('ob-slide-2');
+  s1.style.opacity = '0';
+  s1.style.transform = 'translateY(-14px)';
+  setTimeout(function() {
+    s1.style.display = 'none';
+    s2.style.display = 'block';
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        s2.style.opacity = '1';
+        s2.style.transform = 'translateY(0)';
+      });
+    });
+  }, 300);
+}
+
+function obDismiss() {
+  if (!_obReady) return;
+  _obDone = true; // stops the enforcement interval
+  var overlay = document.getElementById('onboarding-overlay');
+  overlay.style.cssText = 'display:flex;opacity:0;transition:opacity .55s cubic-bezier(.16,1,.3,1);';
+  setTimeout(function() {
+    overlay.style.cssText = 'display:none;';
+    document.body.style.overflow = '';
+  }, 560);
+  localStorage.setItem('ps_onboarded', '1');
+}
+</script>
+
+
+</body>
+</html>

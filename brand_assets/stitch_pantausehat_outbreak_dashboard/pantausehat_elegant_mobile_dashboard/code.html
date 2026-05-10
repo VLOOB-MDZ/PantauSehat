@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "surface-dim": "#141218",
+                        "inverse-on-surface": "#322f35",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "on-secondary-fixed": "#1f1635",
+                        "surface-container-lowest": "#0f0d13",
+                        "surface-tint": "#cfbcff",
+                        "inverse-primary": "#6750a4",
+                        "on-primary-container": "#e0d2ff",
+                        "primary": "#cfbcff",
+                        "on-background": "#e6e0e9",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "surface": "#0f0d13",
+                        "on-primary": "#381e72",
+                        "primary-container": "#6750a4",
+                        "inverse-surface": "#e6e0e9",
+                        "on-secondary": "#342b4b",
+                        "primary-fixed-dim": "#cfbcff",
+                        "on-primary-fixed": "#22005d",
+                        "error-container": "#93000a",
+                        "secondary": "#cdc0e9",
+                        "tertiary-container": "#c9a74d",
+                        "on-surface-variant": "#a19da7",
+                        "surface-variant": "#211f24",
+                        "outline-variant": "#494551",
+                        "tertiary": "#e7c365",
+                        "surface-container": "#1d1b20",
+                        "surface-container-high": "#2b292f",
+                        "primary-fixed": "#e9ddff",
+                        "secondary-fixed": "#e9ddff",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "outline": "#948e9c",
+                        "on-tertiary": "#3e2e00",
+                        "on-error": "#690005",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdf93",
+                        "on-tertiary-fixed": "#241a00",
+                        "background": "#0f0d13",
+                        "secondary-container": "#4d4465",
+                        "surface-container-low": "#1d1b20",
+                        "on-surface": "#f4f2f7",
+                        "surface-container-highest": "#36343a",
+                        "on-tertiary-container": "#503d00",
+                        "on-secondary-container": "#bfb2da",
+                        "surface-bright": "#3b383e",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "accent-red": "#ff5f45",
+                        "accent-cyan": "#38bdf8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "4rem",
+                        "container_max": "1440px",
+                        "gutter": "1.5rem",
+                        "xs": "0.5rem",
+                        "sm": "1rem",
+                        "lg": "2.5rem",
+                        "md": "1.5rem",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "display-xl": ["Manrope"],
+                        "data-point": ["Inter"],
+                        "headline-lg-mobile": ["Manrope"],
+                        "headline-lg": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "label-mono": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "display-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "data-point": ["24px", {"lineHeight": "1", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["30px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-mono": ["11px", {"lineHeight": "1", "letterSpacing": "0.08em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .hairline-border {
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+        }
+        .pulse-critical {
+            box-shadow: 0 0 0 0 rgba(255, 95, 69, 0.4);
+            animation: pulse 2.5s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 95, 69, 0.4); }
+            70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(255, 95, 69, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 95, 69, 0); }
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .btn-premium {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-premium:active {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(0.97);
+        }
+        .btn-accent {
+            background: var(--tw-accent-red); /* Handled by Tailwind classes */
+            box-shadow: 0 4px 20px rgba(255, 95, 69, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen pb-32 selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-xl fixed top-0 z-50 w-full border-b border-white/5">
+<div class="flex justify-between items-center px-gutter w-full max-w-container_max mx-auto h-20">
+<div class="flex items-center gap-3">
+<div class="p-1.5 glass-card rounded-lg hairline-border">
+<img alt="Logo" class="h-6 w-auto object-contain" src="https://placeholder.pics/svg/300"/>
+</div>
+<h1 class="font-headline-lg text-2xl font-extrabold tracking-tight text-white">PantauSehat</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-11 h-11 flex items-center justify-center rounded-full glass-card hairline-border text-on-surface-variant hover:text-white transition-colors active:scale-95">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+</button>
+<div class="w-11 h-11 rounded-full border border-white/10 p-0.5">
+<img class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNVpB5KEe5PgQKUchjid1rnpO3y_R_L0NnPDphIPi_LHazUTH4u93zk4mj__AMj1d2qs-kRKVszBsJpCBplh2o_m4tcmy4giFqXMEjg07ZiZjK8Wx0sx1N0daXVMdZIJJ9ZWsOIbDR4_Co-kQyCSxNufqj8TxZqeaUSLNJ7cYY_mabEA8TFoY0lg8PCmR_qBbCt3sZ58hI3EfUjosIv9XC3d2GDJmnPLL9dvs0-ZbCuWEoAa_6Rgt5ElHk2dgBLlccLNLVAHEPn9k"/>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-24 px-gutter space-y-10">
+<!-- Hero Section -->
+<section>
+<div class="glass-card hairline-border rounded-xl p-8 relative overflow-hidden">
+<div class="absolute -top-12 -right-12 w-48 h-48 bg-primary/10 blur-[80px]"></div>
+<div class="relative z-10 space-y-6">
+<div class="flex items-center gap-2.5">
+<span class="w-2 h-2 rounded-full bg-accent-red pulse-critical"></span>
+<span class="font-label-mono text-[10px] uppercase text-accent-red tracking-[0.2em] font-bold">Terminal Active</span>
+</div>
+<h2 class="font-headline-lg-mobile text-white leading-[1.1]">National Health Vigilance Terminal</h2>
+<p class="font-body-md text-on-surface-variant leading-relaxed opacity-80">Advanced epidemiological surveillance monitoring 14 critical outbreaks across the archipelago.</p>
+<div class="flex gap-4 pt-2">
+<button class="flex-1 bg-accent-red text-white py-4 rounded-xl font-label-mono text-xs uppercase tracking-widest font-bold btn-accent active:scale-[0.98] transition-all">Report Case</button>
+<button class="flex-1 btn-premium text-white py-4 rounded-xl font-label-mono text-xs uppercase tracking-widest font-bold">Statistics</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Mobile Map Section -->
+<section class="space-y-4">
+<div class="flex justify-between items-baseline px-1">
+<h3 class="font-headline-lg text-lg font-bold tracking-tight text-white">Transmission Heatmap</h3>
+<span class="font-label-mono text-[10px] text-primary uppercase tracking-widest font-bold">Interactive View</span>
+</div>
+<div class="relative h-72 rounded-xl overflow-hidden glass-card hairline-border">
+<img class="w-full h-full object-cover opacity-60 grayscale-[0.2]" data-alt="High-contrast digital map of Indonesia with neon heatmaps" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCN-BJxKnEps-FU6_s4EG49nOEtZU8zMXy-IJpbZqOaTlmuqqNrkeKY62yFGAKy2P_0cfxw4K11v6QFIqwmnZ48fQCt38B5tax2jeYBu_9pIRfI-QTGKmulhJA2yDGiI2mrBojfsR51PQLVLVPJ3tWpJLmYYrEPuUWM3PeTup7fDt6XlZSt22QQib00tyrvkdBmsSMv2Sscl2NeMYBr-x7WdohGVmVeZe0iu-c07GiKuepDyLz2ItuS4BpR8SZsvUd3_ZR6dh9h7TE"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+<!-- Floating Info Card -->
+<div class="absolute bottom-4 left-4 right-4 glass-card hairline-border p-4 rounded-xl flex items-center justify-between backdrop-blur-md">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-accent-red/10 border border-accent-red/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-accent-red text-xl">location_on</span>
+</div>
+<div>
+<p class="text-[10px] font-label-mono text-accent-red/80 uppercase font-bold tracking-wider">Hotspot</p>
+<p class="text-sm font-bold text-white">DKI Jakarta</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase tracking-wider">Dengue Surge</p>
+<p class="text-sm font-bold text-accent-red">+12.4%</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Swipeable Trending Cards -->
+<section class="space-y-4">
+<h3 class="font-headline-lg text-lg font-bold tracking-tight text-white px-1">Risk Assessment</h3>
+<div class="flex overflow-x-auto gap-5 hide-scrollbar -mx-gutter px-gutter pb-2">
+<!-- Card 1 -->
+<div class="flex-none w-72 glass-card hairline-border p-6 rounded-2xl space-y-5 relative">
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<p class="font-label-mono text-[10px] text-accent-red tracking-[0.15em] font-bold">CRITICAL</p>
+<h4 class="font-bold text-xl text-white">HFMD</h4>
+</div>
+<span class="material-symbols-outlined text-accent-red" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-end">
+<span class="font-label-mono text-[10px] uppercase text-on-surface-variant">Probability</span>
+<span class="font-label-mono text-xs text-white">85%</span>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-accent-red h-full w-[85%] rounded-full"></div>
+</div>
+</div>
+<p class="text-[13px] text-on-surface-variant leading-relaxed font-medium opacity-70">Rapid transmission reported in elementary education clusters across West Java.</p>
+</div>
+<!-- Card 2 -->
+<div class="flex-none w-72 glass-card hairline-border p-6 rounded-2xl space-y-5">
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<p class="font-label-mono text-[10px] text-tertiary tracking-[0.15em] font-bold uppercase">Elevated</p>
+<h4 class="font-bold text-xl text-white">Leptospirosis</h4>
+</div>
+<span class="material-symbols-outlined text-tertiary">warning</span>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-end">
+<span class="font-label-mono text-[10px] uppercase text-on-surface-variant">Probability</span>
+<span class="font-label-mono text-xs text-white">42%</span>
+</div>
+<div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[42%] rounded-full"></div>
+</div>
+</div>
+<p class="text-[13px] text-on-surface-variant leading-relaxed font-medium opacity-70">Post-flood sanitation monitoring active in Central Java coastal communities.</p>
+</div>
+</div>
+</section>
+<!-- Risk Leaderboard -->
+<section class="space-y-4">
+<div class="flex justify-between items-center px-1">
+<h3 class="font-headline-lg text-lg font-bold tracking-tight text-white">Regional Index</h3>
+<button class="w-8 h-8 rounded-lg glass-card hairline-border flex items-center justify-center">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">tune</span>
+</button>
+</div>
+<div class="space-y-3">
+<!-- Item 1 -->
+<div class="glass-card hairline-border flex items-center justify-between p-5 rounded-2xl group active:bg-white/5 transition-colors">
+<div class="flex items-center gap-5">
+<span class="font-label-mono text-sm text-white/30">01</span>
+<div>
+<p class="font-bold text-white">DKI Jakarta</p>
+<p class="text-[10px] text-on-surface-variant font-label-mono uppercase tracking-widest font-medium">Urban Density Factor</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<p class="text-2xl font-bold font-data-point text-accent-red leading-none">9.4</p>
+<p class="text-[9px] font-label-mono uppercase text-on-surface-variant tracking-tighter pt-1">Risk Score</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="glass-card hairline-border flex items-center justify-between p-5 rounded-2xl group active:bg-white/5 transition-colors">
+<div class="flex items-center gap-5">
+<span class="font-label-mono text-sm text-white/30">02</span>
+<div>
+<p class="font-bold text-white">East Java</p>
+<p class="text-[10px] text-on-surface-variant font-label-mono uppercase tracking-widest font-medium">Agricultural Vector</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<p class="text-2xl font-bold font-data-point text-white/80 leading-none">7.8</p>
+<p class="text-[9px] font-label-mono uppercase text-on-surface-variant tracking-tighter pt-1">Risk Score</p>
+</div>
+</div>
+</div>
+<button class="w-full text-center py-3 text-primary/70 font-label-mono text-[10px] uppercase tracking-[0.2em] font-bold hover:text-primary transition-colors">Expand Full Dataset</button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-[#0f0d13]/90 backdrop-blur-2xl border-t border-white/5 h-[84px] px-6 flex justify-between items-center safe-area-bottom shadow-2xl">
+<!-- Monitor Active -->
+<a class="flex flex-col items-center justify-center gap-1 group" href="#">
+<div class="w-12 h-1 relative flex items-center justify-center overflow-hidden mb-1">
+<div class="w-6 h-full bg-primary rounded-full absolute top-0"></div>
+</div>
+<span class="material-symbols-outlined text-primary text-[24px]">analytics</span>
+<span class="font-label-mono text-[9px] uppercase tracking-wider text-primary font-bold">Monitor</span>
+</a>
+<!-- Live Map -->
+<a class="flex flex-col items-center justify-center gap-1 opacity-40 hover:opacity-100 transition-opacity" href="#">
+<div class="h-1 mb-1"></div>
+<span class="material-symbols-outlined text-white text-[24px]">map</span>
+<span class="font-label-mono text-[9px] uppercase tracking-wider text-white font-medium">Map</span>
+</a>
+<!-- Alerts -->
+<a class="flex flex-col items-center justify-center gap-1 opacity-40 hover:opacity-100 transition-opacity" href="#">
+<div class="h-1 mb-1"></div>
+<span class="material-symbols-outlined text-white text-[24px]">podium</span>
+<span class="font-label-mono text-[9px] uppercase tracking-wider text-white font-medium">Alerts</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center gap-1 opacity-40 hover:opacity-100 transition-opacity" href="#">
+<div class="h-1 mb-1"></div>
+<span class="material-symbols-outlined text-white text-[24px]">person</span>
+<span class="font-label-mono text-[9px] uppercase tracking-wider text-white font-medium">User</span>
+</a>
+</nav>
+</body></html>

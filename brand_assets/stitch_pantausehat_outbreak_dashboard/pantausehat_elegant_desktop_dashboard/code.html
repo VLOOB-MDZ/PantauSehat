@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PantauSehat | Surveillance System Indonesia</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root {
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --glass-bg: rgba(15, 13, 19, 0.6);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(40px);
+            border: 0.5px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(20, 18, 24, 0.8);
+        }
+        body {
+            background-color: #070708;
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(103, 80, 164, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(255, 95, 69, 0.03) 0%, transparent 50%);
+            letter-spacing: -0.01em;
+        }
+        .tracking-tighter-header { letter-spacing: -0.04em; }
+        .leading-tight-header { line-height: 1.05; }
+        
+        /* Map Art Style */
+        .map-container {
+            position: relative;
+            background: radial-gradient(circle at center, #111114 0%, #070708 100%);
+        }
+        .map-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            filter: blur(1px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#cdc0e9",
+                        "surface-dim": "#0a0a0c",
+                        "inverse-on-surface": "#322f35",
+                        "error": "#ff5f45",
+                        "on-secondary-fixed-variant": "#4b4263",
+                        "on-secondary-fixed": "#1f1635",
+                        "surface-container-lowest": "#070708",
+                        "surface-tint": "#cfbcff",
+                        "inverse-primary": "#6750a4",
+                        "on-primary-container": "#e0d2ff",
+                        "primary": "#cfbcff",
+                        "on-background": "#e6e0e9",
+                        "on-primary-fixed-variant": "#4f378a",
+                        "surface": "#0f0d13",
+                        "on-primary": "#381e72",
+                        "primary-container": "#211f24",
+                        "inverse-surface": "#e6e0e9",
+                        "on-secondary": "#342b4b",
+                        "primary-fixed-dim": "#cfbcff",
+                        "on-primary-fixed": "#22005d",
+                        "error-container": "#410002",
+                        "secondary": "#938f99",
+                        "tertiary-container": "#3e2e00",
+                        "on-surface-variant": "#938f99",
+                        "surface-variant": "#1d1b20",
+                        "outline-variant": "#49454f",
+                        "tertiary": "#e7c365",
+                        "surface-container": "#141218",
+                        "surface-container-high": "#1d1b20",
+                        "primary-fixed": "#e9ddff",
+                        "secondary-fixed": "#e9ddff",
+                        "on-tertiary-fixed-variant": "#594400",
+                        "outline": "#49454f",
+                        "on-tertiary": "#3e2e00",
+                        "on-error": "#ffffff",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed": "#ffdf93",
+                        "on-tertiary-fixed": "#241a00",
+                        "background": "#070708",
+                        "secondary-container": "#332d41",
+                        "surface-container-low": "#141218",
+                        "on-surface": "#e6e0e9",
+                        "surface-container-highest": "#211f24",
+                        "on-tertiary-container": "#ffdf93",
+                        "on-secondary-container": "#e9ddff",
+                        "surface-bright": "#3b383e",
+                        "tertiary-fixed-dim": "#e7c365",
+                        "accent-cyan": "#4fd1ed",
+                        "accent-coral": "#ff5f45"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.375rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "8rem",
+                        "container_max": "1280px",
+                        "gutter": "2rem",
+                        "xs": "0.5rem",
+                        "sm": "1rem",
+                        "lg": "3.5rem",
+                        "md": "2rem",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "display-xl": ["Manrope", "sans-serif"],
+                        "data-point": ["Inter", "sans-serif"],
+                        "headline-lg": ["Manrope", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "label-mono": ["Space Grotesk", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="text-on-surface selection:bg-accent-coral/30">
+<header class="fixed top-0 z-50 w-full bg-background/40 backdrop-blur-xl border-b border-white/[0.03] h-20">
+<div class="flex justify-between items-center px-gutter w-full max-w-container_max mx-auto h-full">
+<div class="flex items-center gap-12">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-accent-coral rounded-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xl">analytics</span>
+</div>
+<span class="text-xl font-headline-lg font-bold tracking-tighter-header">PantauSehat</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-white font-medium text-sm border-b border-white pb-1" href="#">Surveillance</a>
+<a class="text-on-surface-variant hover:text-white transition-colors text-sm" href="#">Epidemiology</a>
+<a class="text-on-surface-variant hover:text-white transition-colors text-sm" href="#">Response Units</a>
+<a class="text-on-surface-variant hover:text-white transition-colors text-sm" href="#">Resources</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-white/[0.03] rounded-full px-4 py-2 border border-white/[0.05] hover:border-white/[0.1] transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-lg mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs w-40 text-on-surface placeholder:text-on-surface-variant/50" placeholder="Search province or disease..." type="text"/>
+</div>
+<div class="flex items-center gap-4 border-l border-white/[0.05] pl-6">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-white text-xl">notifications</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-white/[0.1] flex items-center justify-center cursor-pointer overflow-hidden">
+<span class="material-symbols-outlined text-on-surface-variant text-xl">person</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative min-h-[70vh] flex items-center pt-12 pb-24 overflow-hidden">
+<div class="max-w-container_max mx-auto px-gutter w-full relative z-10">
+<div class="grid lg:grid-cols-12 gap-16 items-center">
+<div class="lg:col-span-7 space-y-10">
+<div class="inline-flex items-center gap-3 px-3 py-1 bg-white/[0.03] border border-white/[0.05] rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-accent-coral shadow-[0_0_8px_rgba(255,95,69,0.8)]"></span>
+<span class="font-label-mono text-[10px] text-white/60 uppercase tracking-[0.15em]">Live Monitoring System</span>
+</div>
+<h1 class="font-display-xl text-6xl lg:text-7xl font-extrabold text-white leading-tight-header tracking-tighter-header">
+                        National Health <br/>
+<span class="text-on-surface-variant/30">Intelligence Hub.</span>
+</h1>
+<p class="font-body-md text-lg text-on-surface-variant max-w-xl leading-relaxed font-light">
+                        Real-time infectious disease surveillance across the Indonesian archipelago. Leveraging secure data infrastructure and predictive analytics for public safety.
+                    </p>
+<div class="flex flex-wrap gap-6 pt-4">
+<button class="bg-white text-black px-10 py-4 rounded-xl font-bold hover:bg-accent-coral hover:text-white transition-all duration-300">
+                            Access Dashboard
+                        </button>
+<button class="bg-white/[0.03] text-white border border-white/[0.1] px-10 py-4 rounded-xl font-bold hover:bg-white/[0.08] transition-all">
+                            Daily Situation Report
+                        </button>
+</div>
+</div>
+<div class="lg:col-span-5 relative">
+<div class="glass-card p-10 rounded-xl">
+<div class="flex justify-between items-center mb-8">
+<span class="font-label-mono text-[11px] text-on-surface-variant uppercase tracking-widest">Active National Alerts</span>
+<span class="material-symbols-outlined text-accent-coral">emergency_home</span>
+</div>
+<div class="space-y-1">
+<div class="text-5xl font-display-xl font-extrabold text-white tracking-tighter-header">1,248</div>
+<div class="text-sm font-label-mono text-accent-coral">+12.4% <span class="text-on-surface-variant/40">from previous period</span></div>
+</div>
+<div class="mt-12 h-32 w-full flex items-end gap-1">
+<div class="flex-1 bg-white/[0.05] h-[30%] rounded-t-sm hover:bg-accent-coral/40 transition-all"></div>
+<div class="flex-1 bg-white/[0.05] h-[45%] rounded-t-sm hover:bg-accent-coral/40 transition-all"></div>
+<div class="flex-1 bg-white/[0.05] h-[40%] rounded-t-sm hover:bg-accent-coral/40 transition-all"></div>
+<div class="flex-1 bg-white/[0.05] h-[60%] rounded-t-sm hover:bg-accent-coral/40 transition-all"></div>
+<div class="flex-1 bg-accent-coral/60 h-[85%] rounded-t-sm"></div>
+<div class="flex-1 bg-accent-coral h-full rounded-t-sm"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Geographic Distribution -->
+<section class="max-w-container_max mx-auto px-gutter mb-xl">
+<div class="grid lg:grid-cols-4 gap-8">
+<div class="lg:col-span-3 glass-card rounded-xl overflow-hidden min-h-[640px] relative map-container group">
+<!-- Data Art Map Overlay -->
+<div class="absolute inset-0 opacity-20 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+<div class="absolute inset-0 flex items-center justify-center p-12">
+<img alt="Geographic Distribution" class="w-full h-full object-contain opacity-40 grayscale contrast-125 brightness-50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmFQYZe7GpHptyJ9mk4oMaxva1datatnCTHqlWN4lV8oI30fHj4kujsY-_zbvwWWOkLCKpGyWqYnZh9NTL2C-c8HIHiPVVTVbVAL7kYpC5Tz9HhICk4dIjOg7GSeQeASKXGaK4i0HwkXMjyhhKil-4yUTQT3KLlJHsqZ7mz4XLQZFfVpHP79DV_pylGZOshL8Ysp3IuuY0ojv6taVCc0Tan2PN4HR5Z6KcC5ZMk-4Dh0pg8u5Bmhla1B6BxsrzRKc3zYZ9PnGf7nY"/>
+</div>
+<div class="absolute top-10 left-10 z-10 flex flex-col gap-3">
+<div class="flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/[0.05]">
+<span class="w-2 h-2 rounded-full bg-accent-coral"></span>
+<span class="text-[11px] font-bold tracking-widest text-white/80">CRITICAL ZONES</span>
+</div>
+<div class="flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/[0.05]">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-[11px] font-bold tracking-widest text-white/80">ACTIVE SURVEILLANCE</span>
+</div>
+</div>
+<!-- Subtle Data Points -->
+<div class="absolute bottom-10 right-10 z-10 glass-card p-6 rounded-xl w-64 border-white/[0.03]">
+<h6 class="text-[10px] font-label-mono text-on-surface-variant uppercase mb-4 tracking-widest">Active Response Units</h6>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-surface-container border border-background flex items-center justify-center text-[10px] font-bold">JKT</div>
+<div class="w-8 h-8 rounded-full bg-surface-container border border-background flex items-center justify-center text-[10px] font-bold">BDG</div>
+<div class="w-8 h-8 rounded-full bg-surface-container border border-background flex items-center justify-center text-[10px] font-bold">SBY</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-background flex items-center justify-center text-[10px] text-accent-coral">+14</div>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="glass-card p-8 rounded-xl">
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase tracking-widest mb-3">Today's Inflow</p>
+<h4 class="text-4xl font-bold text-white tracking-tighter-header">42 <span class="text-xs font-normal text-accent-coral">Cases Verified</span></h4>
+</div>
+<div class="glass-card p-8 rounded-xl">
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase tracking-widest mb-3">Geographic Reach</p>
+<h4 class="text-4xl font-bold text-white tracking-tighter-header">12 <span class="text-xs font-normal text-on-surface-variant">/ 38 Prov.</span></h4>
+</div>
+<div class="glass-card p-8 rounded-xl">
+<p class="text-[10px] font-label-mono text-on-surface-variant uppercase tracking-widest mb-3">Primary Concern</p>
+<h4 class="text-2xl font-bold text-white tracking-tighter-header">Dengue Fever</h4>
+<p class="text-xs text-accent-coral mt-2 font-medium">↑ 24% Incident Rate</p>
+</div>
+<button class="w-full py-6 glass-card hover:bg-white hover:text-black hover:border-white transition-all text-white font-bold rounded-xl text-[11px] tracking-widest uppercase">
+                    Export Analysis Data
+                </button>
+</div>
+</div>
+</section>
+<!-- Outbreak Grids -->
+<section class="max-w-container_max mx-auto px-gutter mb-xl">
+<div class="flex items-end justify-between mb-12">
+<div>
+<h2 class="font-headline-lg text-4xl font-bold text-white tracking-tighter-header">Surveillance Clusters</h2>
+<p class="text-on-surface-variant mt-2 text-sm font-light">Identified transmission clusters within the last 24-hour cycle.</p>
+</div>
+<button class="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant hover:text-white transition-colors">Analytical View</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Outbreak Cards - Simplified -->
+<div class="glass-card p-8 rounded-xl group cursor-pointer border-white/[0.04]">
+<div class="flex justify-between items-start mb-10">
+<span class="text-[9px] font-bold tracking-[0.2em] text-accent-coral border border-accent-coral/20 px-2 py-0.5 rounded-sm">CRITICAL</span>
+<span class="text-xs font-label-mono text-white/40">01</span>
+</div>
+<h4 class="text-xl font-bold text-white group-hover:text-accent-coral transition-colors tracking-tight">Dengue - West Java</h4>
+<p class="text-xs text-on-surface-variant mt-2 font-light">Bandung, Bekasi metropolitan</p>
+<div class="mt-10 h-0.5 w-full bg-white/[0.03] overflow-hidden">
+<div class="h-full bg-accent-coral w-3/4"></div>
+</div>
+</div>
+<div class="glass-card p-8 rounded-xl group cursor-pointer border-white/[0.04]">
+<div class="flex justify-between items-start mb-10">
+<span class="text-[9px] font-bold tracking-[0.2em] text-tertiary border border-tertiary/20 px-2 py-0.5 rounded-sm">MONITORING</span>
+<span class="text-xs font-label-mono text-white/40">02</span>
+</div>
+<h4 class="text-xl font-bold text-white group-hover:text-tertiary transition-colors tracking-tight">Hantavirus Pulse</h4>
+<p class="text-xs text-on-surface-variant mt-2 font-light">North Jakarta coastal area</p>
+<div class="mt-10 h-0.5 w-full bg-white/[0.03] overflow-hidden">
+<div class="h-full bg-tertiary w-1/4"></div>
+</div>
+</div>
+<div class="glass-card p-8 rounded-xl group cursor-pointer border-white/[0.04]">
+<div class="flex justify-between items-start mb-10">
+<span class="text-[9px] font-bold tracking-[0.2em] text-accent-cyan border border-accent-cyan/20 px-2 py-0.5 rounded-sm">STABLE</span>
+<span class="text-xs font-label-mono text-white/40">03</span>
+</div>
+<h4 class="text-xl font-bold text-white group-hover:text-accent-cyan transition-colors tracking-tight">Rabies Vector</h4>
+<p class="text-xs text-on-surface-variant mt-2 font-light">Bali - Badung Regency</p>
+<div class="mt-10 h-0.5 w-full bg-white/[0.03] overflow-hidden">
+<div class="h-full bg-accent-cyan w-1/2"></div>
+</div>
+</div>
+<div class="glass-card p-8 rounded-xl group cursor-pointer border-white/[0.04]">
+<div class="flex justify-between items-start mb-10">
+<span class="text-[9px] font-bold tracking-[0.2em] text-white/60 border border-white/20 px-2 py-0.5 rounded-sm">INVESTIGATION</span>
+<span class="text-xs font-label-mono text-white/40">04</span>
+</div>
+<h4 class="text-xl font-bold text-white group-hover:text-white transition-colors tracking-tight">Mpox Screening</h4>
+<p class="text-xs text-on-surface-variant mt-2 font-light">National Port Authorities</p>
+<div class="mt-10 h-0.5 w-full bg-white/[0.03] overflow-hidden">
+<div class="h-full bg-white/40 w-1/5"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Data Insights -->
+<section class="max-w-container_max mx-auto px-gutter grid lg:grid-cols-2 gap-20 mb-xl">
+<div class="space-y-10">
+<h3 class="font-headline-lg text-3xl font-bold text-white tracking-tighter-header">Risk Index by Province</h3>
+<div class="glass-card rounded-xl overflow-hidden border-white/[0.03]">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-white/[0.03]">
+<th class="p-6 font-label-mono text-[10px] text-on-surface-variant uppercase tracking-widest font-normal">Region</th>
+<th class="p-6 font-label-mono text-[10px] text-on-surface-variant uppercase tracking-widest font-normal">Risk Level</th>
+<th class="p-6 font-label-mono text-[10px] text-on-surface-variant uppercase tracking-widest font-normal">Trending</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/[0.02]">
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="p-6 font-medium text-white text-sm">DKI Jakarta</td>
+<td class="p-6"><span class="text-accent-coral font-bold text-xs uppercase tracking-wider">Critical</span></td>
+<td class="p-6 text-accent-coral"><span class="material-symbols-outlined text-sm">north_east</span></td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="p-6 font-medium text-white text-sm">West Java</td>
+<td class="p-6"><span class="text-accent-coral font-bold text-xs uppercase tracking-wider opacity-80">High Risk</span></td>
+<td class="p-6 text-accent-coral"><span class="material-symbols-outlined text-sm">north_east</span></td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="p-6 font-medium text-white text-sm">Central Java</td>
+<td class="p-6"><span class="text-tertiary font-bold text-xs uppercase tracking-wider">Moderate</span></td>
+<td class="p-6 text-on-surface-variant"><span class="material-symbols-outlined text-sm">east</span></td>
+</tr>
+<tr class="hover:bg-white/[0.02] transition-colors">
+<td class="p-6 font-medium text-white text-sm">Bali</td>
+<td class="p-6"><span class="text-tertiary font-bold text-xs uppercase tracking-wider">Moderate</span></td>
+<td class="p-6 text-accent-coral"><span class="material-symbols-outlined text-sm">north_east</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="space-y-10">
+<h3 class="font-headline-lg text-3xl font-bold text-white tracking-tighter-header">Intelligence Briefings</h3>
+<div class="space-y-6">
+<!-- News Item -->
+<div class="glass-card p-6 rounded-xl flex gap-6 group cursor-pointer border-white/[0.03]">
+<div class="w-24 h-24 rounded-lg bg-surface-container-high overflow-hidden shrink-0 border border-white/[0.05]">
+<img alt="Intelligence News" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 grayscale opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbHXBDw20IrJiEgFLtfseD6VDbuVJWw__xAEkOxp5y6KwJhGsIu97UHX-3Vy6BwkkeBOUQ10x8m3nk_gxaP5RS6mhcq9CDoXaYI3tYy_NB31bkbcN2hXfu2k40MSjcPdym_gEMNS9rWnMMa8AUeUgqGYbtVg3jTJ6MtgLm1e7-UFSU5t6CkpbnD72h4YPdJ2Pg5ACEFlElMO0oQ6n5bDmUXojazM1hzxAW7fHqzbObL1cIxyRBByPMnVNH_-QohukPWL0kEgeebuY"/>
+</div>
+<div class="flex-1 py-1">
+<div class="flex gap-4 mb-2">
+<span class="text-[9px] font-bold text-white/40 uppercase tracking-widest">Global Policy</span>
+<span class="text-[9px] font-medium text-white/20 uppercase tracking-widest">2H ago</span>
+</div>
+<h5 class="text-sm font-bold text-white mb-2 leading-snug group-hover:text-accent-coral transition-colors">National Strategy for Mpox Mitigation in High-Traffic Ports</h5>
+<p class="text-[11px] text-on-surface-variant leading-relaxed line-clamp-2 font-light">Ministry of Health initiates enhanced screening protocols for international entry points following WHO updates.</p>
+</div>
+</div>
+<div class="glass-card p-6 rounded-xl flex gap-6 group cursor-pointer border-white/[0.03]">
+<div class="w-24 h-24 rounded-lg bg-surface-container-high overflow-hidden shrink-0 border border-white/[0.05]">
+<img alt="Intelligence News" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 grayscale opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGa0Z7oaDhmAgyC6KKyj6p9qNGlS5h1blbllxT7Ue9k6E4mF0j8_uGsI4saK6z9U5FHT91b4siw42jPzhK_aUmtsVq8FQG1ZSpw_K94n2e34U55EFu4VmcUCDriTgOh7v82jdZhHvFiWjYa1FgJBs41orUhL9zLGa7XfLhpYyFEOwbMvf5ifIdVNgh-iRicVtCsLD27OKfaS418J8qzlOHz7lx4sUdHFLdHa7FULWGK1672C_WM7BIm-ia7tlioEvlw1XM7YfDtHs"/>
+</div>
+<div class="flex-1 py-1">
+<div class="flex gap-4 mb-2">
+<span class="text-[9px] font-bold text-white/40 uppercase tracking-widest">Analytical Study</span>
+<span class="text-[9px] font-medium text-white/20 uppercase tracking-widest">5H ago</span>
+</div>
+<h5 class="text-sm font-bold text-white mb-2 leading-snug group-hover:text-accent-coral transition-colors">Correlative Analysis: Precipitation Variance &amp; Dengue Clusters</h5>
+<p class="text-[11px] text-on-surface-variant leading-relaxed line-clamp-2 font-light">Modeling indicates a significant shift in breeding patterns across the Central Java coastline due to monsoon anomalies.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 w-full z-50 lg:hidden bg-background/80 backdrop-blur-2xl border-t border-white/[0.05] h-20 px-8 flex justify-around items-center">
+<div class="flex flex-col items-center text-white">
+<span class="material-symbols-outlined text-2xl">grid_view</span>
+<span class="text-[8px] mt-1 font-label-mono uppercase tracking-widest font-bold">Surveillance</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant/40">
+<span class="material-symbols-outlined text-2xl">public</span>
+<span class="text-[8px] mt-1 font-label-mono uppercase tracking-widest">Globe</span>
+</div>
+<div class="flex flex-col items-center text-on-surface-variant/40">
+<span class="material-symbols-outlined text-2xl">notifications_active</span>
+<span class="text-[8px] mt-1 font-label-mono uppercase tracking-widest">Alerts</span>
+</div>
+</nav>
+<footer class="bg-background py-24 border-t border-white/[0.03]">
+<div class="max-w-container_max mx-auto px-gutter grid grid-cols-1 md:grid-cols-4 gap-16">
+<div class="space-y-8">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 bg-accent-coral rounded-sm"></div>
+<span class="text-lg font-bold tracking-tighter-header">PantauSehat</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed font-light">
+                Secure National Health Intelligence System. Dedicated to strengthening the biological resilience of the Republic of Indonesia.
+            </p>
+</div>
+<div>
+<h6 class="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-8">Navigation</h6>
+<ul class="space-y-4 text-[11px] text-on-surface-variant uppercase tracking-widest">
+<li><a class="hover:text-white transition-colors" href="#">Global Dashboard</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Geographic Data</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Epidemic Archive</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Open Data Protocol</a></li>
+</ul>
+</div>
+<div>
+<h6 class="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-8">Resources</h6>
+<ul class="space-y-4 text-[11px] text-on-surface-variant uppercase tracking-widest">
+<li><a class="hover:text-white transition-colors" href="#">Field Manuals</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Intelligence Briefs</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Developer API</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Media Center</a></li>
+</ul>
+</div>
+<div>
+<h6 class="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-8">Crisis Response</h6>
+<div class="glass-card p-6 rounded-xl border-accent-coral/20">
+<p class="text-[10px] font-bold text-accent-coral mb-2 tracking-widest uppercase">Emergency Hotline</p>
+<p class="text-2xl font-bold text-white tracking-tighter-header">119 Ext 9</p>
+<p class="text-[10px] text-on-surface-variant mt-4 font-light leading-relaxed">Secured line for regional epidemiological reporting and rapid response request.</p>
+</div>
+</div>
+</div>
+<div class="max-w-container_max mx-auto px-gutter mt-24 pt-12 border-t border-white/[0.03] flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="text-[9px] text-on-surface-variant/40 font-label-mono tracking-widest uppercase">
+            © 2024 PANTAUSEHAT INDONESIA. OFFICIAL SURVEILLANCE INFRASTRUCTURE.
+        </div>
+<div class="flex gap-8 text-[9px] text-on-surface-variant/40 font-label-mono tracking-widest uppercase">
+<a class="hover:text-white transition-colors" href="#">Security Protocol</a>
+<a class="hover:text-white transition-colors" href="#">Data Privacy</a>
+</div>
+</div>
+</footer>
+</body></html>
