@@ -423,17 +423,17 @@ tailwind.config = {
 <main class="pt-20 relative z-10">
 
   <!-- ── HERO ────────────────────────────────── -->
-  <section id="surveillance" class="relative min-h-[76vh] flex items-center pt-16 pb-28 overflow-hidden">
+  <section id="surveillance" class="relative min-h-0 sm:min-h-[76vh] flex items-center pt-10 pb-14 sm:pt-16 sm:pb-28 overflow-hidden">
 
     <!-- Ambient blobs -->
     <div class="absolute -left-40 top-1/4 w-[520px] h-[480px] rounded-full bg-coral/[.04] blur-[140px] pointer-events-none"></div>
     <div class="absolute right-0 bottom-0 w-[600px] h-[500px] rounded-full bg-cyan/[.03] blur-[160px] pointer-events-none"></div>
 
     <div class="max-w-[1280px] mx-auto px-6 lg:px-8 w-full relative z-10">
-      <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <div class="grid lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-16 items-center">
 
         <!-- Left -->
-        <div class="lg:col-span-7 space-y-9">
+        <div class="lg:col-span-7 space-y-5 sm:space-y-9">
           <!-- Live badge -->
           <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/[.06] bg-white/[.03]">
             <span class="w-1.5 h-1.5 rounded-full bg-coral dot-coral"></span>
@@ -441,20 +441,20 @@ tailwind.config = {
           </div>
 
           <!-- Headline -->
-          <h1 class="font-display text-[58px] sm:text-[70px] lg:text-[80px] font-extrabold text-white h-tight">
+          <h1 class="font-display text-[36px] sm:text-[58px] lg:text-[80px] font-extrabold text-white h-tight">
             Pusat Intelijen<br/>
             <span class="text-white/22">Kesehatan Nasional.</span>
           </h1>
 
-          <p class="font-body text-[17px] text-on-muted max-w-[480px] leading-[1.78] font-light">
+          <p class="font-body text-[14px] sm:text-[17px] text-on-muted max-w-[480px] leading-[1.78] font-light">
             Surveilans penyakit menular secara real-time di seluruh kepulauan Indonesia. Memanfaatkan infrastruktur data yang aman dan analitik prediktif untuk keselamatan publik.
           </p>
 
-          <div class="flex flex-wrap gap-5 pt-1">
-            <a href="#map" class="inline-block px-10 py-4 bg-white text-black rounded-xl font-display font-bold text-sm hover:bg-coral hover:text-white active:scale-[.97] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/60">
+          <div class="flex flex-wrap gap-3 sm:gap-5 pt-1">
+            <a href="#map" class="inline-block px-6 py-2.5 sm:px-10 sm:py-4 bg-white text-black rounded-xl font-display font-bold text-sm hover:bg-coral hover:text-white active:scale-[.97] transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral/60">
               Buka Dashboard
             </a>
-            <a href="#epidemiology" class="inline-block px-10 py-4 bg-white/[.03] text-white border border-white/[.1] rounded-xl font-display font-bold text-sm hover:bg-white/[.07] hover:border-white/20 active:scale-[.97] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+            <a href="#epidemiology" class="inline-block px-6 py-2.5 sm:px-10 sm:py-4 bg-white/[.03] text-white border border-white/[.1] rounded-xl font-display font-bold text-sm hover:bg-white/[.07] hover:border-white/20 active:scale-[.97] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
               Laporan Situasi Harian
             </a>
           </div>
@@ -462,9 +462,9 @@ tailwind.config = {
 
         <!-- Right: Alert card -->
         <div class="lg:col-span-5">
-          <div class="glass rounded-2xl p-8 lg:p-10">
+          <div class="glass rounded-2xl p-5 sm:p-8 lg:p-10">
             <!-- Header -->
-            <div class="flex justify-between items-start mb-7">
+            <div class="flex justify-between items-start mb-4 sm:mb-7">
               <div>
                 <p class="font-mono text-[9.5px] text-on-muted uppercase tracking-[.17em]">Peringatan Nasional Aktif</p>
                 <div class="mt-2.5 w-8 h-[1.5px] bg-coral/50 rounded-full"></div>
@@ -473,8 +473,8 @@ tailwind.config = {
             </div>
 
             <!-- Big number -->
-            <div class="mb-9">
-              <div id="stat-total" class="font-display text-[52px] font-extrabold text-white h-tight leading-none">1,248</div>
+            <div class="mb-5 sm:mb-9">
+              <div id="stat-total" class="font-display text-[36px] sm:text-[52px] font-extrabold text-white h-tight leading-none">1,248</div>
               <div class="flex items-center gap-2.5 mt-2.5">
                 <span id="stat-pct" class="font-mono text-sm font-bold text-coral">+12.4%</span>
                 <span class="font-mono text-[11px] text-white/30">dari periode sebelumnya</span>
@@ -482,7 +482,7 @@ tailwind.config = {
             </div>
 
             <!-- Bar chart -->
-            <div class="h-28 flex items-end gap-1.5">
+            <div class="h-20 sm:h-28 flex items-end gap-1.5">
               <div class="flex-1 bg-white/[.04] rounded-t-sm bar" style="height:28%;animation-delay:.05s"></div>
               <div class="flex-1 bg-white/[.04] rounded-t-sm bar" style="height:42%;animation-delay:.12s"></div>
               <div class="flex-1 bg-white/[.04] rounded-t-sm bar" style="height:36%;animation-delay:.19s"></div>
@@ -614,12 +614,12 @@ tailwind.config = {
       <div class="flex lg:flex-col gap-4 lg:gap-4 flex-wrap">
         <div class="glass rounded-2xl p-6 flex-1 min-w-[140px]">
           <p class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Kasus Masuk Hari Ini</p>
-          <div id="stat-today" class="font-display text-[40px] font-extrabold text-white h-tight leading-none">42</div>
+          <div id="stat-today" class="font-display text-[28px] sm:text-[40px] font-extrabold text-white h-tight leading-none">42</div>
           <p class="font-mono text-[10px] text-coral font-bold mt-2">Kasus Terverifikasi</p>
         </div>
         <div class="glass rounded-2xl p-6 flex-1 min-w-[140px]">
           <p class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Jangkauan Geografis</p>
-          <div id="stat-provinces" class="font-display text-[40px] font-extrabold text-white h-tight leading-none">
+          <div id="stat-provinces" class="font-display text-[28px] sm:text-[40px] font-extrabold text-white h-tight leading-none">
             12<span class="text-base font-normal text-on-muted/55"> / 38</span>
           </div>
           <p class="font-mono text-[10px] text-on-muted mt-2">Provinsi</p>
@@ -639,10 +639,10 @@ tailwind.config = {
 
 
   <!-- ── SURVEILLANCE CLUSTERS ──────────────────── -->
-  <section id="clusters" class="max-w-[1280px] mx-auto px-6 lg:px-8 mb-32 reveal">
-    <div class="flex items-end justify-between mb-11">
+  <section id="clusters" class="max-w-[1280px] mx-auto px-6 lg:px-8 mb-16 sm:mb-32 reveal">
+    <div class="flex items-end justify-between mb-7 sm:mb-11">
       <div>
-        <h2 class="font-display text-[38px] font-extrabold text-white h-tight">Klaster Surveilans</h2>
+        <h2 class="font-display text-[26px] sm:text-[38px] font-extrabold text-white h-tight">Klaster Surveilans</h2>
         <p class="text-on-muted text-sm font-light mt-3 leading-relaxed">Klaster transmisi yang teridentifikasi dalam siklus 24 jam terakhir.</p>
       </div>
       <button class="font-mono text-[9.5px] font-bold tracking-[.16em] uppercase text-on-muted hover:text-white transition-colors duration-200 active:opacity-60 focus-visible:outline-none">
@@ -653,112 +653,112 @@ tailwind.config = {
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
       <!-- CRITICAL -->
-      <div data-cluster="dengue" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(255,95,69,.08)] transition-shadow duration-500 focus-within:ring-1 focus-within:ring-coral/30">
-        <div class="flex justify-between items-start mb-10">
+      <div data-cluster="dengue" class="cluster-card glass p-4 sm:p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(255,95,69,.08)] transition-shadow duration-500 focus-within:ring-1 focus-within:ring-coral/30">
+        <div class="flex justify-between items-start mb-5 sm:mb-10">
           <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-coral border border-coral/25 px-2.5 py-1 rounded-sm uppercase">Kritis</span>
           <span class="font-mono text-[11px] text-white/28">01</span>
         </div>
         <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-coral transition-colors duration-200">DBD — Jawa Barat</h4>
         <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Metropolitan Bandung, Bekasi</p>
-        <div class="mt-10 prog-track">
+        <div class="mt-5 sm:mt-10 prog-track">
           <div class="prog-fill bg-coral group-hover:brightness-110" style="width:75%"></div>
         </div>
         <p class="font-mono text-[9px] text-coral/55 mt-2 tracking-wider">75% ambang batas peringatan</p>
       </div>
 
       <!-- MONITORING -->
-      <div data-cluster="hantavirus" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(231,195,101,.06)] transition-shadow duration-500">
-        <div class="flex justify-between items-start mb-10">
+      <div data-cluster="hantavirus" class="cluster-card glass p-4 sm:p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(231,195,101,.06)] transition-shadow duration-500">
+        <div class="flex justify-between items-start mb-5 sm:mb-10">
           <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-amber border border-amber/25 px-2.5 py-1 rounded-sm uppercase">Pemantauan</span>
           <span class="font-mono text-[11px] text-white/28">02</span>
         </div>
         <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-amber transition-colors duration-200">Hantavirus Pulse</h4>
         <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Kawasan pesisir Jakarta Utara</p>
-        <div class="mt-10 prog-track">
+        <div class="mt-5 sm:mt-10 prog-track">
           <div class="prog-fill bg-amber" style="width:28%"></div>
         </div>
         <p class="font-mono text-[9px] text-amber/55 mt-2 tracking-wider">28% ambang batas peringatan</p>
       </div>
 
       <!-- STABLE -->
-      <div data-cluster="rabies" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(79,209,237,.06)] transition-shadow duration-500">
-        <div class="flex justify-between items-start mb-10">
+      <div data-cluster="rabies" class="cluster-card glass p-4 sm:p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(79,209,237,.06)] transition-shadow duration-500">
+        <div class="flex justify-between items-start mb-5 sm:mb-10">
           <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-cyan border border-cyan/25 px-2.5 py-1 rounded-sm uppercase">Stabil</span>
           <span class="font-mono text-[11px] text-white/28">03</span>
         </div>
         <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-cyan transition-colors duration-200">Vektor Rabies</h4>
         <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Bali — Kabupaten Badung</p>
-        <div class="mt-10 prog-track">
+        <div class="mt-5 sm:mt-10 prog-track">
           <div class="prog-fill bg-cyan" style="width:48%"></div>
         </div>
         <p class="font-mono text-[9px] text-cyan/55 mt-2 tracking-wider">48% ambang batas peringatan</p>
       </div>
 
       <!-- INVESTIGATION -->
-      <div data-cluster="mpox" class="cluster-card glass p-7 rounded-2xl group cursor-pointer">
-        <div class="flex justify-between items-start mb-10">
+      <div data-cluster="mpox" class="cluster-card glass p-4 sm:p-7 rounded-2xl group cursor-pointer">
+        <div class="flex justify-between items-start mb-5 sm:mb-10">
           <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-white/45 border border-white/15 px-2.5 py-1 rounded-sm uppercase">Investigasi</span>
           <span class="font-mono text-[11px] text-white/28">04</span>
         </div>
         <h4 class="font-display text-[19px] font-bold text-white h-snug">Skrining Mpox</h4>
         <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Otoritas Pelabuhan Nasional</p>
-        <div class="mt-10 prog-track">
+        <div class="mt-5 sm:mt-10 prog-track">
           <div class="prog-fill bg-white/30" style="width:18%"></div>
         </div>
         <p class="font-mono text-[9px] text-white/28 mt-2 tracking-wider">18% ambang batas peringatan</p>
       </div>
 
       <!-- CRITICAL: Malaria — Papua -->
-      <div data-cluster="malaria" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(255,95,69,.08)] transition-shadow duration-500 focus-within:ring-1 focus-within:ring-coral/30">
-        <div class="flex justify-between items-start mb-10">
+      <div data-cluster="malaria" class="cluster-card glass p-4 sm:p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(255,95,69,.08)] transition-shadow duration-500 focus-within:ring-1 focus-within:ring-coral/30">
+        <div class="flex justify-between items-start mb-5 sm:mb-10">
           <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-coral border border-coral/25 px-2.5 py-1 rounded-sm uppercase">Kritis</span>
           <span class="font-mono text-[11px] text-white/28">05</span>
         </div>
         <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-coral transition-colors duration-200">Lonjakan Malaria — Papua</h4>
         <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Distrik pegunungan, Jayapura</p>
-        <div class="mt-10 prog-track">
+        <div class="mt-5 sm:mt-10 prog-track">
           <div class="prog-fill bg-coral group-hover:brightness-110" style="width:82%"></div>
         </div>
         <p class="font-mono text-[9px] text-coral/55 mt-2 tracking-wider">82% ambang batas peringatan</p>
       </div>
 
       <!-- MONITORING: Leptospirosis — East Java -->
-      <div data-cluster="leptospirosis" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(231,195,101,.06)] transition-shadow duration-500">
-        <div class="flex justify-between items-start mb-10">
+      <div data-cluster="leptospirosis" class="cluster-card glass p-4 sm:p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(231,195,101,.06)] transition-shadow duration-500">
+        <div class="flex justify-between items-start mb-5 sm:mb-10">
           <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-amber border border-amber/25 px-2.5 py-1 rounded-sm uppercase">Pemantauan</span>
           <span class="font-mono text-[11px] text-white/28">06</span>
         </div>
         <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-amber transition-colors duration-200">Leptospirosis — Jawa Timur</h4>
         <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Zona pasca-banjir, Surabaya</p>
-        <div class="mt-10 prog-track">
+        <div class="mt-5 sm:mt-10 prog-track">
           <div class="prog-fill bg-amber" style="width:61%"></div>
         </div>
         <p class="font-mono text-[9px] text-amber/55 mt-2 tracking-wider">61% ambang batas peringatan</p>
       </div>
 
       <!-- STABLE: Tuberculosis — Multi-province -->
-      <div data-cluster="tuberculosis" class="cluster-card glass p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(79,209,237,.06)] transition-shadow duration-500">
-        <div class="flex justify-between items-start mb-10">
+      <div data-cluster="tuberculosis" class="cluster-card glass p-4 sm:p-7 rounded-2xl group cursor-pointer hover:shadow-[0_0_48px_rgba(79,209,237,.06)] transition-shadow duration-500">
+        <div class="flex justify-between items-start mb-5 sm:mb-10">
           <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-cyan border border-cyan/25 px-2.5 py-1 rounded-sm uppercase">Stabil</span>
           <span class="font-mono text-[11px] text-white/28">07</span>
         </div>
         <h4 class="font-display text-[19px] font-bold text-white h-snug group-hover:text-cyan transition-colors duration-200">Tuberkulosis — Perkotaan</h4>
         <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Jakarta, Surabaya, Medan</p>
-        <div class="mt-10 prog-track">
+        <div class="mt-5 sm:mt-10 prog-track">
           <div class="prog-fill bg-cyan" style="width:44%"></div>
         </div>
         <p class="font-mono text-[9px] text-cyan/55 mt-2 tracking-wider">44% ambang batas peringatan</p>
       </div>
 
       <!-- INVESTIGATION: Chikungunya — South Sulawesi -->
-      <div data-cluster="chikungunya" class="cluster-card glass p-7 rounded-2xl group cursor-pointer">
-        <div class="flex justify-between items-start mb-10">
+      <div data-cluster="chikungunya" class="cluster-card glass p-4 sm:p-7 rounded-2xl group cursor-pointer">
+        <div class="flex justify-between items-start mb-5 sm:mb-10">
           <span class="font-mono text-[8.5px] font-bold tracking-[.18em] text-white/45 border border-white/15 px-2.5 py-1 rounded-sm uppercase">Investigasi</span>
           <span class="font-mono text-[11px] text-white/28">08</span>
         </div>
         <h4 class="font-display text-[19px] font-bold text-white h-snug">Chikungunya — Sulawesi</h4>
         <p class="text-[12px] text-on-muted mt-2 font-light leading-relaxed">Kawasan metropolitan Makassar</p>
-        <div class="mt-10 prog-track">
+        <div class="mt-5 sm:mt-10 prog-track">
           <div class="prog-fill bg-white/30" style="width:12%"></div>
         </div>
         <p class="font-mono text-[9px] text-white/28 mt-2 tracking-wider">12% ambang batas peringatan</p>
