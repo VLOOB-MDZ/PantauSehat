@@ -1472,7 +1472,7 @@ tailwind.config = {
     'GORONTALO':'Gorontalo','SULAWESI BARAT':'Sulawesi Barat','WEST SULAWESI':'Sulawesi Barat',
     'MALUKU':'Maluku','MALUKU UTARA':'Maluku Utara','NORTH MALUKU':'Maluku Utara',
     'PAPUA BARAT':'Papua Barat','WEST PAPUA':'Papua Barat','PAPUA':'Papua',
-    // GADM NAME_1 variants
+    // GADM NAME_1 variants (English)
     'Nanggroe Aceh Darussalam':'Aceh','Bangka-Belitung':'Kepulauan Bangka Belitung','Bangka Belitung':'Kepulauan Bangka Belitung',
     'Daerah Istimewa Yogyakarta':'DI Yogyakarta','Jakarta Raya':'DKI Jakarta','North Sumatra':'Sumatera Utara',
     'West Sumatra':'Sumatera Barat','South Sumatra':'Sumatera Selatan','West Java':'Jawa Barat',
@@ -1482,20 +1482,37 @@ tailwind.config = {
     'South Sulawesi':'Sulawesi Selatan','Southeast Sulawesi':'Sulawesi Tenggara','West Sulawesi':'Sulawesi Barat',
     'North Maluku':'Maluku Utara','West Papua':'Papua Barat','West Nusa Tenggara':'Nusa Tenggara Barat',
     'East Nusa Tenggara':'Nusa Tenggara Timur','Riau Islands':'Kepulauan Riau',
+    // Hybrid variants (English directional + Indonesian geography)
+    'West Jawa':'Jawa Barat','WEST JAWA':'Jawa Barat',
+    'Central Jawa':'Jawa Tengah','CENTRAL JAWA':'Jawa Tengah',
+    'East Jawa':'Jawa Timur','EAST JAWA':'Jawa Timur',
+    'West Sumatera':'Sumatera Barat','WEST SUMATERA':'Sumatera Barat',
+    'North Sumatera':'Sumatera Utara','NORTH SUMATERA':'Sumatera Utara',
+    'South Sumatera':'Sumatera Selatan','SOUTH SUMATERA':'Sumatera Selatan',
+    'Special Capital Region of Jakarta':'DKI Jakarta','SPECIAL CAPITAL REGION OF JAKARTA':'DKI Jakarta',
+    'Jakarta Special Capital Region':'DKI Jakarta',
+    'Special Region of Yogyakarta':'DI Yogyakarta','SPECIAL REGION OF YOGYAKARTA':'DI Yogyakarta',
+    'Yogyakarta Special Region':'DI Yogyakarta',
+    'Bangka Belitung Islands':'Kepulauan Bangka Belitung','BANGKA BELITUNG ISLANDS':'Kepulauan Bangka Belitung',
+    'Di Yogyakarta':'DI Yogyakarta',
   };
+
+  // Build a reliable Map from NAME_MAP + PROVINCE_DATA keys (avoids plain-object lookup quirks)
+  const _normMap = (() => {
+    const m = new Map();
+    for (const [k, v] of Object.entries(NAME_MAP)) { m.set(k, v); m.set(k.toUpperCase(), v); }
+    for (const k of Object.keys(PROVINCE_DATA))    { m.set(k, k); m.set(k.toUpperCase(), k); }
+    return m;
+  })();
 
   function normalizeName(raw) {
     if (!raw) return '';
-    const upper = raw.toString().trim().toUpperCase();
-    if (NAME_MAP[upper]) return NAME_MAP[upper];
-    // Try title-case lookup
-    const title = raw.toString().trim();
-    if (NAME_MAP[title]) return NAME_MAP[title];
-    return title;
+    const s = raw.toString().trim();
+    return _normMap.get(s) || _normMap.get(s.toUpperCase()) || s;
   }
 
   function getFeatureName(props) {
-    const raw = props.state || props.Propinsi || props.NAME_1 || props.name || props.NAME || props.ADM1_EN || '';
+    const raw = props.state || props.Propinsi || props.propinsi || props.PROPINSI || props.NAME_1 || props.name || props.NAME || props.ADM1_EN || '';
     return normalizeName(raw);
   }
 
@@ -1727,6 +1744,7 @@ tailwind.config = {
 
   // ── Province intel panel ──────────────────────────────────────────────────
   function openPanel(name) {
+    const n = normalizeName(name); if (n) name = n;
     const d = PROVINCE_DATA[name] || { risk:'normal', disease:'Tidak Ada Data', cases:'—', trend:'—', pop:'—', desc:'Tidak ada data surveilans tersedia untuk provinsi ini.' };
     const s = RISK[d.risk];
 
