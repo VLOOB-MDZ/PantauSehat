@@ -289,10 +289,92 @@ tailwind.config = {
     background:linear-gradient(90deg,transparent,rgba(255,95,69,.35),rgba(79,209,237,.2),transparent);
     pointer-events:none;
   }
+
+  /* ── Hantavirus Mode Button ─────────────────────────────── */
+  .hanta-btn {
+    display:inline-flex; align-items:center; gap:10px;
+    padding:11px 22px;
+    border-radius:12px;
+    font-family:'Manrope',sans-serif; font-weight:700; font-size:13px;
+    letter-spacing:-.01em;
+    color:#e7c365;
+    background:rgba(231,195,101,.06);
+    border:.5px solid rgba(231,195,101,.22);
+    cursor:pointer;
+    outline:none;
+    position:relative; overflow:hidden;
+    transition:background .25s, border-color .25s,
+                transform .2s cubic-bezier(.34,1.56,.64,1),
+                box-shadow .25s;
+  }
+  .hanta-btn:hover {
+    background:rgba(231,195,101,.13);
+    border-color:rgba(231,195,101,.42);
+    transform:translateY(-2px);
+    box-shadow:0 0 32px rgba(231,195,101,.18);
+  }
+  .hanta-btn:active { transform:scale(.97); }
+  .hanta-btn:focus-visible { box-shadow:0 0 0 2px rgba(231,195,101,.38); }
+  .hanta-btn.hanta-active {
+    background:rgba(231,195,101,.14);
+    border-color:rgba(231,195,101,.55);
+    animation:hanta-glow 2.6s ease-in-out infinite;
+  }
+  @keyframes hanta-glow {
+    0%,100% { box-shadow:0 0 0 0 rgba(231,195,101,0); }
+    50%      { box-shadow:0 0 30px 5px rgba(231,195,101,.2); }
+  }
+
+  /* ── Hantavirus mode flash overlay ─────────────────────── */
+  #hanta-flash {
+    position:fixed; inset:0; z-index:9998; pointer-events:none; opacity:0;
+    background:radial-gradient(ellipse 70% 80% at 20% 40%, rgba(231,195,101,.1) 0%, transparent 65%);
+  }
+  @keyframes hanta-flash-anim {
+    0%   { opacity:0; }
+    18%  { opacity:1; }
+    100% { opacity:0; }
+  }
+  #hanta-flash.flashing { animation:hanta-flash-anim .7s cubic-bezier(.4,0,.6,1) forwards; }
+
+  /* ── Hantavirus mode banner ─────────────────────────────── */
+  #hanta-banner {
+    position:fixed; top:80px; left:0; right:0; z-index:49;
+    opacity:0; transform:translateY(-100%);
+    transition:opacity .45s cubic-bezier(.16,1,.3,1),
+                transform .45s cubic-bezier(.16,1,.3,1);
+    pointer-events:none;
+  }
+  #hanta-banner.hanta-banner-visible {
+    opacity:1; transform:translateY(0); pointer-events:auto;
+  }
+
+  /* ── Ringkasan Hantavirus panel ─────────────────────────── */
+  #hanta-ringkasan {
+    overflow:hidden; max-height:0;
+    opacity:0; transform:translateY(18px);
+    transition:max-height .65s cubic-bezier(.16,1,.3,1),
+                opacity .45s cubic-bezier(.16,1,.3,1),
+                transform .45s cubic-bezier(.16,1,.3,1);
+  }
+  #hanta-ringkasan.hanta-panel-visible {
+    max-height:600px; opacity:1; transform:translateY(0);
+  }
+
+  /* ── Body ambient shift when mode active ────────────────── */
+  body.hanta-mode {
+    background-image:
+      radial-gradient(ellipse 900px 700px at -10% 15%,  rgba(231,195,101,.05)  0%, transparent 55%),
+      radial-gradient(ellipse 700px 600px at 110%  85%, rgba(231,195,101,.025) 0%, transparent 55%),
+      radial-gradient(ellipse 1100px 900px at 50%  50%, rgba(103,80,164,.018)  0%, transparent 65%);
+  }
 </style>
 </head>
 
 <body class="min-h-screen selection:bg-coral/30 selection:text-white">
+
+<!-- Hantavirus mode flash overlay -->
+<div id="hanta-flash" aria-hidden="true"></div>
 
 <!-- ═══════════════════════════════════════════
      ONBOARDING OVERLAY
@@ -416,6 +498,29 @@ tailwind.config = {
   </div>
 </header>
 
+<!-- ── Hantavirus Mode Alert Banner ─────────────────────────────────── -->
+<div id="hanta-banner" role="alert" aria-live="polite">
+  <div style="background:rgba(17,14,8,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:.5px solid rgba(231,195,101,.22);">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0 dot-amber"></span>
+        <span class="font-mono text-[9.5px] font-bold text-amber uppercase tracking-[.16em]">MODE AKTIF: Pemantauan Hantavirus</span>
+        <span class="hidden sm:inline font-mono text-[8.5px] text-amber/45 uppercase tracking-[.1em]">— Data diperbarui real-time · Tidak menular antarmanusia</span>
+      </div>
+      <div class="flex items-center gap-4 sm:gap-6 flex-wrap">
+        <div class="hidden md:flex items-center gap-5">
+          <span class="font-mono text-[8.5px] text-white/35 uppercase tracking-wider">CFR <span class="text-amber/70">~36%</span></span>
+          <span class="font-mono text-[8.5px] text-white/35 uppercase tracking-wider">Inkubasi <span class="text-amber/70">1–8 minggu</span></span>
+          <span class="font-mono text-[8.5px] text-white/35 uppercase tracking-wider">RI <span class="text-amber/70">23 kasus / 3 thn</span></span>
+        </div>
+        <button onclick="toggleHantavirusMode()"
+          class="font-mono text-[8.5px] text-amber/50 hover:text-amber uppercase tracking-[.12em] transition-colors duration-200 focus-visible:outline-none active:opacity-60">
+          × Matikan Mode
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════
      MAIN
@@ -457,6 +562,27 @@ tailwind.config = {
             <a href="#epidemiology" class="inline-block px-6 py-2.5 sm:px-10 sm:py-4 bg-white/[.03] text-white border border-white/[.1] rounded-xl font-display font-bold text-sm hover:bg-white/[.07] hover:border-white/20 active:scale-[.97] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20">
               Laporan Situasi Harian
             </a>
+          </div>
+
+          <!-- Hantavirus Monitor Mode Button -->
+          <div class="pt-1">
+            <button id="hanta-mode-btn" onclick="toggleHantavirusMode()" class="hanta-btn group" aria-pressed="false">
+              <!-- Biohazard-style icon -->
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0">
+                <circle cx="12" cy="12" r="2.2" fill="#e7c365"/>
+                <path d="M12 9.8C12 9.8 9.5 5.5 5.5 7C3 8 2.5 11 4 13" stroke="#e7c365" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M12 9.8C12 9.8 14.5 5.5 18.5 7C21 8 21.5 11 20 13" stroke="#e7c365" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M9.8 13.2C9.8 13.2 6 14.5 6.5 18.5C7 21 10 22 12.5 21" stroke="#e7c365" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M14.2 13.2C14.2 13.2 18 14.5 17.5 18.5C17 21 14 22 11.5 21" stroke="#e7c365" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span id="hanta-btn-label">Mode Hantavirus</span>
+              <!-- Active indicator dot (hidden when inactive) -->
+              <span id="hanta-btn-dot" class="w-1.5 h-1.5 rounded-full bg-amber dot-amber" style="display:none;flex-shrink:0"></span>
+              <!-- Subtle shimmer on hover -->
+              <span class="absolute inset-0 opacity-0 group-hover:opacity-100 rounded-xl pointer-events-none"
+                    style="background:linear-gradient(105deg,transparent 40%,rgba(231,195,101,.07) 60%,transparent 75%);transition:opacity .3s"></span>
+            </button>
+            <p class="font-mono text-[8.5px] text-white/22 mt-2 uppercase tracking-[.12em]">Flagship · Surveilans Hantavirus Eksklusif</p>
           </div>
         </div>
 
@@ -613,20 +739,20 @@ tailwind.config = {
       <!-- Right: quick stats -->
       <div class="flex lg:flex-col gap-4 lg:gap-4 flex-wrap">
         <div class="glass rounded-2xl p-6 flex-1 min-w-[140px]">
-          <p class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Kasus Masuk Hari Ini</p>
+          <p id="stat-today-label" class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Kasus Masuk Hari Ini</p>
           <div id="stat-today" class="font-display text-[28px] sm:text-[40px] font-extrabold text-white h-tight leading-none">42</div>
-          <p class="font-mono text-[10px] text-coral font-bold mt-2">Kasus Terverifikasi</p>
+          <p id="stat-today-sub" class="font-mono text-[10px] text-coral font-bold mt-2">Kasus Terverifikasi</p>
         </div>
         <div class="glass rounded-2xl p-6 flex-1 min-w-[140px]">
-          <p class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Jangkauan Geografis</p>
+          <p id="stat-geo-label" class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Jangkauan Geografis</p>
           <div id="stat-provinces" class="font-display text-[28px] sm:text-[40px] font-extrabold text-white h-tight leading-none">
             12<span class="text-base font-normal text-on-muted/55"> / 38</span>
           </div>
-          <p class="font-mono text-[10px] text-on-muted mt-2">Provinsi</p>
+          <p id="stat-geo-sub" class="font-mono text-[10px] text-on-muted mt-2">Provinsi</p>
         </div>
         <div class="glass rounded-2xl p-6 flex-1 min-w-[140px]">
-          <p class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Ancaman Utama</p>
-          <div class="font-display text-[20px] font-extrabold text-white h-snug">Demam Berdarah</div>
+          <p id="stat-threat-label" class="font-mono text-[9px] text-on-muted uppercase tracking-[.16em] mb-3">Ancaman Utama</p>
+          <div id="stat-threat-name" class="font-display text-[20px] font-extrabold text-white h-snug">Demam Berdarah</div>
           <p id="stat-dengue" class="font-mono text-[10px] text-coral font-bold mt-2">↑ 24% Angka Insiden</p>
         </div>
         <button id="btn-export-csv" class="w-full py-5 glass hover:bg-white hover:text-black font-mono text-[9px] tracking-[.2em] uppercase text-white rounded-xl border border-white/[.06] hover:border-white transition-all duration-300 active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30">
@@ -765,6 +891,123 @@ tailwind.config = {
       </div>
 
     </div>
+
+    <!-- ── Ringkasan Hantavirus Panel (slides in when mode active) ── -->
+    <div id="hanta-ringkasan" class="mt-6">
+      <div class="rounded-2xl p-7 sm:p-10 border" style="background:rgba(231,195,101,.04);border-color:rgba(231,195,101,.18);">
+
+        <!-- Header row -->
+        <div class="flex items-start justify-between gap-4 mb-8 flex-wrap">
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <span class="font-mono text-[8.5px] font-bold text-amber border border-amber/25 px-2.5 py-1 rounded-sm uppercase tracking-[.15em]">Protokol Aktif</span>
+              <span class="font-mono text-[8.5px] text-white/25 uppercase tracking-[.1em]">WHO Threshold Alert</span>
+            </div>
+            <h3 class="font-display text-[22px] sm:text-[28px] font-extrabold text-white h-tight">Ringkasan Hantavirus</h3>
+            <p class="font-body text-[13px] text-on-muted mt-2 leading-relaxed max-w-[480px]">Panel operasional pemantauan hantavirus di Indonesia. Data merujuk pada laporan Kemenkes RI dan WHO.</p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <p class="font-mono text-[8px] text-white/20 uppercase tracking-widest mb-1">Ambang Batas WHO</p>
+            <p class="font-mono text-[11px] text-amber/65">≥5 kasus terkonfirmasi / 100K pop</p>
+          </div>
+        </div>
+
+        <!-- 4 stat tiles -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div class="rounded-xl p-4" style="background:rgba(231,195,101,.06);border:.5px solid rgba(231,195,101,.14);">
+            <p class="font-mono text-[8px] text-amber/55 uppercase tracking-widest mb-1.5">Case Fatality Rate</p>
+            <div class="font-display text-[28px] font-extrabold h-tight" style="color:#e7c365;">~36%</div>
+            <p class="font-mono text-[8.5px] text-white/30 mt-1">Global (WHO)</p>
+          </div>
+          <div class="rounded-xl p-4" style="background:rgba(231,195,101,.06);border:.5px solid rgba(231,195,101,.14);">
+            <p class="font-mono text-[8px] text-amber/55 uppercase tracking-widest mb-1.5">Masa Inkubasi</p>
+            <div class="font-display text-[28px] font-extrabold h-tight" style="color:#e7c365;">1–8</div>
+            <p class="font-mono text-[8.5px] text-white/30 mt-1">Minggu</p>
+          </div>
+          <div class="rounded-xl p-4" style="background:rgba(231,195,101,.06);border:.5px solid rgba(231,195,101,.14);">
+            <p class="font-mono text-[8px] text-amber/55 uppercase tracking-widest mb-1.5">Kasus di Indonesia</p>
+            <div class="font-display text-[28px] font-extrabold h-tight" style="color:#e7c365;">23</div>
+            <p class="font-mono text-[8.5px] text-white/30 mt-1">dalam 3 tahun (Kemenkes)</p>
+          </div>
+          <div class="rounded-xl p-4" style="background:rgba(231,195,101,.06);border:.5px solid rgba(231,195,101,.14);">
+            <p class="font-mono text-[8px] text-amber/55 uppercase tracking-widest mb-1.5">Penularan</p>
+            <div class="font-display text-[16px] font-extrabold h-snug leading-tight mt-1" style="color:#e7c365;">Tidak Menular</div>
+            <p class="font-mono text-[8.5px] text-white/30 mt-1">Antar manusia</p>
+          </div>
+        </div>
+
+        <!-- 2-column info -->
+        <div class="grid sm:grid-cols-2 gap-6 mb-8">
+          <!-- Transmission routes -->
+          <div class="rounded-xl p-5" style="background:rgba(255,255,255,.025);border:.5px solid rgba(255,255,255,.06);">
+            <p class="font-mono text-[8.5px] font-bold text-amber/70 uppercase tracking-[.14em] mb-4">Jalur Transmisi</p>
+            <ul class="space-y-2.5">
+              <li class="flex items-start gap-2.5">
+                <span class="w-1 h-1 rounded-full bg-amber/50 flex-shrink-0 mt-2"></span>
+                <span class="font-body text-[12.5px] text-on-muted leading-relaxed">Kontak langsung dengan tikus reservoir (terutama genus <em class="text-white/60">Rattus</em>)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-1 h-1 rounded-full bg-amber/50 flex-shrink-0 mt-2"></span>
+                <span class="font-body text-[12.5px] text-on-muted leading-relaxed">Inhalasi aerosol dari air seni, feses, atau ludah tikus terinfeksi</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-1 h-1 rounded-full bg-amber/50 flex-shrink-0 mt-2"></span>
+                <span class="font-body text-[12.5px] text-on-muted leading-relaxed">Kontak dengan permukaan yang terkontaminasi ekskreta tikus</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-1 h-1 rounded-full bg-amber/20 flex-shrink-0 mt-2"></span>
+                <span class="font-body text-[12.5px] text-white/30 leading-relaxed italic">Tidak terbukti menular dari manusia ke manusia</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Risk zones -->
+          <div class="rounded-xl p-5" style="background:rgba(255,255,255,.025);border:.5px solid rgba(255,255,255,.06);">
+            <p class="font-mono text-[8.5px] font-bold text-amber/70 uppercase tracking-[.14em] mb-4">Zona Risiko di Indonesia</p>
+            <ul class="space-y-2.5">
+              <li class="flex items-start gap-2.5">
+                <span class="w-1 h-1 rounded-full bg-amber/50 flex-shrink-0 mt-2"></span>
+                <span class="font-body text-[12.5px] text-on-muted leading-relaxed">Kawasan perkotaan padat (Jakarta Utara, permukiman pesisir)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-1 h-1 rounded-full bg-amber/50 flex-shrink-0 mt-2"></span>
+                <span class="font-body text-[12.5px] text-on-muted leading-relaxed">Pertanian dan area pedesaan dengan populasi tikus tinggi</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-1 h-1 rounded-full bg-amber/50 flex-shrink-0 mt-2"></span>
+                <span class="font-body text-[12.5px] text-on-muted leading-relaxed">Kawasan hutan dan perkebunan (Kalimantan, Sumatera)</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="w-1 h-1 rounded-full bg-amber/50 flex-shrink-0 mt-2"></span>
+                <span class="font-body text-[12.5px] text-on-muted leading-relaxed">Lokasi banjir pasca-musim hujan (meningkatkan kontak manusia-tikus)</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Action buttons + note -->
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3 flex-wrap">
+            <button onclick="downloadHantavirusPDF()" class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-display font-bold text-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber/40 active:scale-[.97]"
+              style="background:rgba(231,195,101,.12);border:.5px solid rgba(231,195,101,.32);color:#e7c365;transition:background .2s,border-color .2s,transform .15s cubic-bezier(.34,1.56,.64,1);"
+              onmouseover="this.style.background='rgba(231,195,101,.2)'" onmouseout="this.style.background='rgba(231,195,101,.12)'">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 7l4 4 4-4M2 13h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Unduh Laporan PDF
+            </button>
+            <a href="tel:119" class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-display font-bold text-[12px] text-white/50 focus-visible:outline-none active:scale-[.97] no-underline"
+              style="background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.1);transition:background .2s,color .2s,transform .15s cubic-bezier(.34,1.56,.64,1);"
+              onmouseover="this.style.background='rgba(255,255,255,.08)';this.style.color='rgba(255,255,255,.8)'" onmouseout="this.style.background='rgba(255,255,255,.04)';this.style.color='rgba(255,255,255,.5)'"
+              title="Hubungi Halo Kemenkes — 119">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 2.5A1.5 1.5 0 013.5 1h1.6a1 1 0 01.97.757l.7 2.8a1 1 0 01-.29.99L5.1 6.9a9.06 9.06 0 004 4l1.353-1.38a1 1 0 01.99-.29l2.8.7A1 1 0 0115 11v1.5A1.5 1.5 0 0113.5 14C6.596 14 1 8.404 1 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Laporkan Kasus Baru — 119
+            </a>
+          </div>
+          <p class="font-mono text-[8px] text-white/20 uppercase tracking-[.1em]">Sumber: Kemenkes RI · WHO · ECDC</p>
+        </div>
+
+      </div>
+    </div>
+
   </section>
 
 
@@ -1352,7 +1595,11 @@ tailwind.config = {
   // ── Cluster → province filter rules ──────────────────────────────────────
   const CLUSTER_FILTER = {
     dengue:        { label: 'Demam Berdarah',     match: (d)       => d.disease === 'Demam Berdarah Dengue' },
-    hantavirus:    { label: 'Hantavirus',         match: (d, name) => name === 'DKI Jakarta' },
+    hantavirus:    { label: 'Hantavirus',         match: (d, name) => [
+      'DKI Jakarta','Jawa Barat','Jawa Timur','Banten',
+      'Jawa Tengah','Sumatera Utara','Kepulauan Riau',
+      'Sulawesi Selatan','Kalimantan Timur'
+    ].includes(name) },
     rabies:        { label: 'Rabies',             match: (d)       => d.disease === 'Rabies' },
     mpox:          { label: 'Skrining Mpox',      match: (d, name) => ['DKI Jakarta','Kepulauan Riau','Sulawesi Selatan','Banten'].includes(name) },
     malaria:       { label: 'Malaria',            match: (d)       => d.disease === 'Malaria' },
@@ -1648,15 +1895,30 @@ tailwind.config = {
       .style('stroke-width', '1.5px')
       .style('cursor', 'pointer')
       .on('mouseenter', function (ev, d) {
-        const r = getRisk(d);
-        d3.select(this).style('fill', RISK[r].fillH).style('stroke', RISK[r].strokeH);
         const name = getFeatureName(d.properties);
+        const data = PROVINCE_DATA[name] || {};
+        const cf = activeCluster ? CLUSTER_FILTER[activeCluster] : null;
+        const matches = !cf || cf.match(data, name);
+        if (matches) {
+          const r = getRisk(d);
+          d3.select(this).style('fill', RISK[r].fillH).style('stroke', RISK[r].strokeH);
+        }
         if (name) showTooltip(ev, name);
       })
       .on('mousemove', ev => moveTooltip(ev))
       .on('mouseleave', function (_, d) {
-        const r = getRisk(d);
-        d3.select(this).style('fill', RISK[r].fill).style('stroke', RISK[r].stroke);
+        const name = getFeatureName(d.properties);
+        const data = PROVINCE_DATA[name] || {};
+        const cf = activeCluster ? CLUSTER_FILTER[activeCluster] : null;
+        const matches = !cf || cf.match(data, name);
+        if (matches) {
+          const r = getRisk(d);
+          d3.select(this).style('fill', RISK[r].fill).style('stroke', RISK[r].stroke);
+        } else {
+          d3.select(this)
+            .style('fill', 'rgba(255,255,255,0.03)')
+            .style('stroke', 'rgba(255,255,255,0.07)');
+        }
         hideTooltip();
       })
       .on('click', function (ev, d) {
@@ -1902,6 +2164,344 @@ tailwind.config = {
       }
     });
   });
+</script>
+
+<!-- ── Hantavirus Monitor Mode ──────────────────────────────────────── -->
+<script>
+(function () {
+  'use strict';
+
+  let hantavirusMode = false;
+
+  // Snapshot of original stat card content for restoration
+  const ORIG = {
+    todayLabel:    'Kasus Masuk Hari Ini',
+    todayVal:      null, // set on first toggle from live DOM
+    todaySub:      'Kasus Terverifikasi',
+    geoLabel:      'Jangkauan Geografis',
+    geoVal:        null,
+    geoSub:        'Provinsi',
+    threatLabel:   'Ancaman Utama',
+    threatName:    'Demam Berdarah',
+    threatSub:     null,
+  };
+
+  // Hantavirus-specific stat content
+  const HANTA = {
+    todayLabel:  'Kasus Aktif',
+    todayVal:    '23',
+    todaySub:    'Terkonfirmasi · 3 Tahun',
+    geoLabel:    'Provinsi Terdampak',
+    geoVal:      '9<span class="text-base font-normal text-on-muted/55"> / 38</span>',
+    geoSub:      'Provinsi (Kemenkes RI)',
+    threatLabel: 'Patogen Utama',
+    threatName:  'Hantavirus',
+    threatSub:   '↑ ~36% Case Fatality Rate',
+  };
+
+  function $id(id) { return document.getElementById(id); }
+
+  // Trigger the amber flash overlay
+  function triggerFlash() {
+    const el = $id('hanta-flash');
+    if (!el) return;
+    el.classList.remove('flashing');
+    void el.offsetWidth; // reflow to restart animation
+    el.classList.add('flashing');
+    setTimeout(() => el.classList.remove('flashing'), 750);
+  }
+
+  // Filter briefings feed to hantavirus-only articles
+  function filterBriefings(active) {
+    const feed = $id('briefings-feed');
+    if (!feed) return;
+    const articles = feed.querySelectorAll('a');
+    let visibleCount = 0;
+
+    articles.forEach(a => {
+      if (!active) {
+        a.style.display = '';
+        return;
+      }
+      const text = (a.textContent || '').toLowerCase();
+      const isHanta = text.includes('hantavirus') || text.includes('hanta');
+      a.style.display = isHanta ? '' : 'none';
+      if (isHanta) visibleCount++;
+    });
+
+    // Show/hide "limited results" notice
+    let notice = $id('hanta-briefings-notice');
+    if (active) {
+      if (!notice) {
+        notice = document.createElement('p');
+        notice.id = 'hanta-briefings-notice';
+        notice.className = 'font-mono text-[9px] text-amber/50 uppercase tracking-[.12em] pt-2 text-center';
+        feed.appendChild(notice);
+      }
+      notice.textContent = `${visibleCount} artikel hantavirus tersedia`;
+      notice.style.display = '';
+    } else if (notice) {
+      notice.style.display = 'none';
+    }
+  }
+
+  // Swap right-panel stat cards
+  function updateStatCards(active) {
+    const data = active ? HANTA : ORIG;
+
+    const todayLabel  = $id('stat-today-label');
+    const todaySub    = $id('stat-today-sub');
+    const todayVal    = $id('stat-today');
+    const geoLabel    = $id('stat-geo-label');
+    const geoSub      = $id('stat-geo-sub');
+    const geoVal      = $id('stat-provinces');
+    const threatLabel = $id('stat-threat-label');
+    const threatName  = $id('stat-threat-name');
+    const threatSub   = $id('stat-dengue');
+
+    // Snapshot originals on first activation
+    if (ORIG.todayVal === null && todayVal)    ORIG.todayVal    = todayVal.textContent;
+    if (ORIG.geoVal   === null && geoVal)      ORIG.geoVal      = geoVal.innerHTML;
+    if (ORIG.threatSub === null && threatSub)  ORIG.threatSub   = threatSub.textContent;
+
+    if (todayLabel)  todayLabel.textContent  = data.todayLabel;
+    if (todaySub)    todaySub.textContent    = data.todaySub;
+    if (todayVal)    todayVal.textContent    = active ? data.todayVal : (ORIG.todayVal || '42');
+    if (geoLabel)    geoLabel.textContent    = data.geoLabel;
+    if (geoSub)      geoSub.textContent      = data.geoSub;
+    if (geoVal)      geoVal.innerHTML        = active ? data.geoVal : (ORIG.geoVal || '12<span class="text-base font-normal text-on-muted/55"> / 38</span>');
+    if (threatLabel) threatLabel.textContent = data.threatLabel;
+    if (threatName)  threatName.textContent  = data.threatName;
+    if (threatSub) {
+      threatSub.textContent = active ? data.threatSub : (ORIG.threatSub || '↑ 24% Angka Insiden');
+      threatSub.style.color = active ? '#e7c365' : '';
+    }
+  }
+
+  window.downloadHantavirusPDF = function () {
+    const today = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    const provinces = [
+      { name:'DKI Jakarta',       risk:'Kritis',   cases:342, trend:'+18%' },
+      { name:'Jawa Barat',        risk:'Kritis',   cases:289, trend:'+12%' },
+      { name:'Jawa Timur',        risk:'Tinggi',   cases:156, trend:'+9%'  },
+      { name:'Banten',            risk:'Tinggi',   cases:134, trend:'+11%' },
+      { name:'Jawa Tengah',       risk:'Sedang',   cases:98,  trend:'+2%'  },
+      { name:'Sumatera Utara',    risk:'Tinggi',   cases:112, trend:'+8%'  },
+      { name:'Kepulauan Riau',    risk:'Rendah',   cases:9,   trend:'0%'   },
+      { name:'Sulawesi Selatan',  risk:'Rendah',   cases:38,  trend:'0%'   },
+      { name:'Kalimantan Timur',  risk:'Rendah',   cases:31,  trend:'+3%'  },
+    ];
+
+    const provinceRows = provinces.map((p, i) => `
+      <tr style="border-bottom:1px solid #e8e0d0;">
+        <td style="padding:10px 14px;font-size:13px;color:#2c1f00;">${i+1}. ${p.name}</td>
+        <td style="padding:10px 14px;font-size:12px;font-weight:700;color:${p.risk==='Kritis'?'#c0392b':p.risk==='Tinggi'?'#e67e22':p.risk==='Sedang'?'#8B6914':'#27ae60'};">${p.risk}</td>
+        <td style="padding:10px 14px;font-size:13px;text-align:right;">${p.cases}</td>
+        <td style="padding:10px 14px;font-size:13px;text-align:right;color:${p.trend.startsWith('+')?'#c0392b':'#27ae60'};">${p.trend}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <title>Laporan Hantavirus — PantauSehat</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Georgia', serif; background: #fff; color: #1a1000; padding: 48px 56px; font-size: 14px; line-height: 1.6; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #c8a415; padding-bottom: 20px; margin-bottom: 32px; }
+    .logo { font-family: 'Arial', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: -.03em; color: #1a1000; }
+    .logo span { color: #c8a415; }
+    .meta { text-align: right; font-family: 'Arial', sans-serif; font-size: 11px; color: #7a6a40; line-height: 1.7; }
+    .doc-title { font-family: 'Arial', sans-serif; font-size: 28px; font-weight: 900; letter-spacing: -.03em; color: #1a1000; margin-bottom: 6px; }
+    .doc-sub { font-size: 13px; color: #7a6a40; margin-bottom: 32px; }
+    .alert-box { background: #fffbef; border: 1px solid #c8a415; border-left: 4px solid #c8a415; border-radius: 6px; padding: 14px 18px; margin-bottom: 32px; }
+    .alert-box p { font-family: 'Arial', sans-serif; font-size: 12px; color: #7a5c00; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+    .alert-box span { font-size: 13px; color: #3d2e00; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
+    .stat-card { border: 1px solid #ddd4b0; border-radius: 8px; padding: 16px; background: #fffdf5; }
+    .stat-label { font-family: 'Arial', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #9a8040; margin-bottom: 6px; }
+    .stat-val { font-family: 'Arial', sans-serif; font-size: 28px; font-weight: 900; color: #c8a415; line-height: 1; margin-bottom: 4px; }
+    .stat-note { font-size: 10px; color: #9a8040; }
+    h2 { font-family: 'Arial', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #7a5c00; border-bottom: 1px solid #e8e0d0; padding-bottom: 8px; margin-bottom: 16px; margin-top: 32px; }
+    table { width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; }
+    thead tr { background: #fffbef; }
+    thead th { padding: 10px 14px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #9a8040; text-align: left; border-bottom: 2px solid #c8a415; }
+    thead th:last-child, thead th:nth-child(3) { text-align: right; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+    .info-block { border: 1px solid #e8e0d0; border-radius: 8px; padding: 16px 20px; }
+    .info-block ul { padding-left: 16px; }
+    .info-block li { font-size: 12.5px; color: #3d2e00; margin-bottom: 8px; line-height: 1.55; }
+    .footer { margin-top: 40px; border-top: 1px solid #e8e0d0; padding-top: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .footer p { font-family: 'Arial', sans-serif; font-size: 10px; color: #b0a080; }
+    .disclaimer { background: #f8f4ea; border-radius: 6px; padding: 12px 16px; margin-top: 24px; font-size: 11px; color: #7a6a40; line-height: 1.6; }
+    @media print { body { padding: 0; } @page { margin: 24mm 20mm; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="logo">Pantau<span>Sehat</span></div>
+      <div style="font-family:Arial,sans-serif;font-size:11px;color:#9a8040;margin-top:4px;">Pusat Intelijen Kesehatan Nasional</div>
+    </div>
+    <div class="meta">
+      <div>Tanggal: <strong>${today}</strong></div>
+      <div>Dokumen: <strong>HANTA-RPT-001</strong></div>
+      <div>Status: <strong style="color:#c8a415;">PROTOKOL AKTIF</strong></div>
+    </div>
+  </div>
+
+  <div class="doc-title">Laporan Surveilans Hantavirus</div>
+  <div class="doc-sub">Ringkasan Intelijen Kesehatan · Indonesia · Sumber: Kemenkes RI & WHO</div>
+
+  <div class="alert-box">
+    <p>Ambang Batas WHO</p>
+    <span>≥5 kasus terkonfirmasi per 100.000 populasi — Pemantauan aktif diperlukan di 9 provinsi prioritas</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Case Fatality Rate</div>
+      <div class="stat-val">~36%</div>
+      <div class="stat-note">Global (WHO)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Masa Inkubasi</div>
+      <div class="stat-val">1–8</div>
+      <div class="stat-note">Minggu</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Kasus di Indonesia</div>
+      <div class="stat-val">23</div>
+      <div class="stat-note">Dalam 3 tahun (Kemenkes)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Penularan</div>
+      <div class="stat-val" style="font-size:18px;">Tidak Menular</div>
+      <div class="stat-note">Antarmanusia</div>
+    </div>
+  </div>
+
+  <h2>Distribusi Geografis — 9 Provinsi Terdampak</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Provinsi</th>
+        <th>Tingkat Risiko</th>
+        <th>Kasus Aktif</th>
+        <th>Tren</th>
+      </tr>
+    </thead>
+    <tbody>${provinceRows}</tbody>
+  </table>
+
+  <div class="two-col" style="margin-top:32px;">
+    <div class="info-block">
+      <h2 style="margin-top:0;">Jalur Transmisi</h2>
+      <ul>
+        <li>Kontak langsung dengan tikus reservoir (terutama genus <em>Rattus</em>)</li>
+        <li>Inhalasi aerosol dari air seni, feses, atau ludah tikus terinfeksi</li>
+        <li>Kontak dengan permukaan yang terkontaminasi ekskreta tikus</li>
+        <li><em>Tidak terbukti menular dari manusia ke manusia</em></li>
+      </ul>
+    </div>
+    <div class="info-block">
+      <h2 style="margin-top:0;">Zona Risiko di Indonesia</h2>
+      <ul>
+        <li>Kawasan perkotaan padat (Jakarta Utara, permukiman pesisir)</li>
+        <li>Pertanian dan area pedesaan dengan populasi tikus tinggi</li>
+        <li>Kawasan hutan dan perkebunan (Kalimantan, Sumatera)</li>
+        <li>Lokasi banjir pasca-musim hujan (meningkatkan kontak manusia-tikus)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Catatan:</strong> Laporan ini dibuat secara otomatis oleh sistem PantauSehat berdasarkan data surveilans yang tersedia. Data kasus aktif bersumber dari integrasi Supabase dan pembaruan Kemenkes RI. Untuk pelaporan resmi, hubungi Halo Kemenkes di <strong>119</strong>.
+  </div>
+
+  <div class="footer">
+    <p>© PantauSehat · VLOOB.teams · pantausehat.id</p>
+    <p>Dokumen ini bersifat informatif — bukan pengganti diagnosis atau kebijakan resmi</p>
+  </div>
+
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=900,height=700');
+    w.document.write(html);
+    w.document.close();
+  };
+
+  window.toggleHantavirusMode = function () {
+    hantavirusMode = !hantavirusMode;
+
+    const btn       = $id('hanta-mode-btn');
+    const btnLabel  = $id('hanta-btn-label');
+    const btnDot    = $id('hanta-btn-dot');
+    const banner    = $id('hanta-banner');
+    const ringkasan = $id('hanta-ringkasan');
+
+    // 1. Flash overlay
+    triggerFlash();
+
+    // 2. Body ambient
+    document.body.classList.toggle('hanta-mode', hantavirusMode);
+
+    // 3. Button state
+    if (btn) {
+      btn.classList.toggle('hanta-active', hantavirusMode);
+      btn.setAttribute('aria-pressed', hantavirusMode ? 'true' : 'false');
+    }
+    if (btnLabel) btnLabel.textContent = hantavirusMode ? 'Hantavirus Aktif — Keluar' : 'Mode Hantavirus';
+    if (btnDot)   btnDot.style.display = hantavirusMode ? 'inline-block' : 'none';
+
+    // 4. Alert banner
+    if (banner) banner.classList.toggle('hanta-banner-visible', hantavirusMode);
+
+    // 5. Map cluster filter (uses existing function)
+    if (typeof window.activateClusterFilter === 'function') {
+      // activateClusterFilter toggles — force to desired state
+      const currentlyActive = document.querySelector('[data-cluster="hantavirus"]')?.style?.outline !== '';
+      if ((hantavirusMode && !currentlyActive) || (!hantavirusMode && currentlyActive)) {
+        window.activateClusterFilter('hantavirus');
+      }
+    }
+
+    // 6. Hantavirus cluster card — amber highlight ring
+    const hantaCard = document.querySelector('[data-cluster="hantavirus"]');
+    if (hantaCard) {
+      if (hantavirusMode) {
+        hantaCard.style.outline    = '1.5px solid rgba(231,195,101,.55)';
+        hantaCard.style.boxShadow  = '0 0 40px rgba(231,195,101,.14)';
+        hantaCard.style.transform  = 'scale(1.02)';
+      } else {
+        hantaCard.style.outline    = '';
+        hantaCard.style.boxShadow  = '';
+        hantaCard.style.transform  = '';
+      }
+    }
+
+    // 7. Ringkasan panel
+    if (ringkasan) ringkasan.classList.toggle('hanta-panel-visible', hantavirusMode);
+
+    // 8. Right stat cards
+    updateStatCards(hantavirusMode);
+
+    // 9. Briefings feed filter
+    filterBriefings(hantavirusMode);
+
+    // 10. Scroll to clusters when activating so user sees the panel
+    if (hantavirusMode) {
+      setTimeout(() => {
+        const clustersSection = document.getElementById('clusters');
+        if (clustersSection) {
+          clustersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 120);
+    }
+  };
+})();
 </script>
 
 <!-- ═══════════════════════════════════════════
