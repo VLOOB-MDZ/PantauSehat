@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Protokol Keamanan — PantauSehat</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "bg-base":         "#070708",
+        "surface":         "#0f0d13",
+        "surface-low":     "#141218",
+        "surface-mid":     "#1d1b20",
+        "surface-high":    "#2b292f",
+        "surface-top":     "#36343a",
+        "on-surface":      "#e6e0e9",
+        "on-muted":        "#938f99",
+        "outline-dim":     "#49454f",
+        "coral":           "#ff5f45",
+        "cyan":            "#4fd1ed",
+        "amber":           "#e7c365",
+      },
+      fontFamily: {
+        display: ["Manrope", "sans-serif"],
+        body:    ["Inter", "sans-serif"],
+        mono:    ["Space Grotesk", "monospace"],
+      },
+    }
+  }
+}
+</script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: #070708;
+    background-image:
+      radial-gradient(ellipse 900px 700px at -10% 15%,  rgba(255,95,69,.04)   0%, transparent 55%),
+      radial-gradient(ellipse 700px 600px at 110%  85%, rgba(79,209,237,.025) 0%, transparent 55%),
+      radial-gradient(ellipse 1100px 900px at 50%  50%, rgba(103,80,164,.015) 0%, transparent 65%);
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -.01em;
+    color: #e6e0e9;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: .022;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glass {
+    background: rgba(15,13,19,.62);
+    backdrop-filter: blur(44px) saturate(160%);
+    -webkit-backdrop-filter: blur(44px) saturate(160%);
+    border: .5px solid rgba(255,255,255,.065);
+  }
+
+  .h-tight { line-height: 1.0; letter-spacing: -0.04em; }
+  .h-snug  { line-height: 1.15; letter-spacing: -0.025em; }
+
+  .section-rule {
+    width: 2px;
+    background: linear-gradient(to bottom, #ff5f45, transparent);
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+
+  .article-num {
+    font-family: 'Space Grotesk', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255,95,69,.6);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  a { text-decoration: none; color: inherit; }
+
+  /* fade-in on load */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp .55s cubic-bezier(.16,1,.3,1) both; }
+  .fade-up-d1 { animation-delay: .08s; }
+  .fade-up-d2 { animation-delay: .16s; }
+  .fade-up-d3 { animation-delay: .24s; }
+
+  .back-link:hover { color: #ff5f45; }
+  .back-link { transition: color .2s ease; }
+</style>
+</head>
+<body class="min-h-screen relative">
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header class="sticky top-0 z-50 glass border-b border-white/[.04]">
+  <div class="max-w-[1100px] mx-auto px-6 lg:px-8 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5 back-link">
+      <div class="w-7 h-7 rounded-lg flex-shrink-0 border border-coral/25 bg-coral/10 flex items-center justify-center">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full p-1.5">
+          <polyline points="2,18 8,18 11,10 15,26 19,14 22,22 26,18 34,18"
+                    stroke="#ff5f45" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="font-display text-[14px] font-bold text-white">PantauSehat</span>
+    </a>
+    <a href="index.html" class="back-link flex items-center gap-1.5 font-mono text-[10px] text-on-muted uppercase tracking-[.12em]">
+      <svg viewBox="0 0 16 16" fill="none" class="w-3.5 h-3.5">
+        <path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Kembali ke Dashboard
+    </a>
+  </div>
+</header>
+
+
+<!-- ══════════════ HERO ══════════════ -->
+<section class="max-w-[1100px] mx-auto px-6 lg:px-8 pt-16 pb-12 fade-up">
+  <div class="flex items-center gap-3 mb-6">
+    <span class="font-mono text-[8.5px] font-bold text-cyan border border-cyan/25 bg-cyan/5 px-2.5 py-1 rounded-sm uppercase tracking-[.15em]">Dokumen Resmi</span>
+    <span class="font-mono text-[8.5px] text-on-muted/50 uppercase tracking-[.12em]">PSID-SEC-2026</span>
+  </div>
+  <h1 class="font-display text-[36px] sm:text-[52px] font-extrabold text-white h-tight mb-5">
+    Protokol<br><span class="text-coral">Keamanan</span>
+  </h1>
+  <p class="text-[14px] text-on-muted leading-[1.75] max-w-[580px] font-light">
+    Dokumen ini menetapkan standar keamanan teknis dan operasional yang diterapkan oleh PantauSehat dalam pengelolaan, perlindungan, dan penyajian data surveilans kesehatan nasional.
+  </p>
+  <div class="mt-8 flex flex-wrap items-center gap-6 font-mono text-[9.5px] text-on-muted/50 uppercase tracking-[.12em]">
+    <span>Berlaku sejak: <strong class="text-on-muted/80">1 Januari 2026</strong></span>
+    <span class="w-px h-3 bg-white/10"></span>
+    <span>Versi: <strong class="text-on-muted/80">2.4.1</strong></span>
+    <span class="w-px h-3 bg-white/10"></span>
+    <span>Ditinjau: <strong class="text-on-muted/80">Triwulanan</strong></span>
+  </div>
+</section>
+
+
+<!-- ══════════════ DISCLAIMER BOX ══════════════ -->
+<section class="max-w-[1100px] mx-auto px-6 lg:px-8 mb-14 fade-up fade-up-d1">
+  <div class="glass rounded-2xl p-6 border-amber/[.14] flex gap-4">
+    <div class="flex-shrink-0 mt-0.5">
+      <svg viewBox="0 0 20 20" fill="none" class="w-4.5 h-4.5 w-5 h-5">
+        <path d="M10 2L2 17h16L10 2z" stroke="#e7c365" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M10 8v4M10 14v.5" stroke="#e7c365" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <p class="font-mono text-[9px] font-bold text-amber uppercase tracking-[.15em] mb-2">Pernyataan Penting</p>
+      <p class="text-[12.5px] text-on-muted leading-[1.75]">
+        PantauSehat adalah platform informasi publik, <strong class="text-white/80">bukan sistem rekam medis</strong> dan <strong class="text-white/80">bukan alat diagnosis klinis</strong>. Seluruh data yang ditampilkan bersumber dari lembaga pemerintah dan otoritas kesehatan resmi. Pengguna bertanggung jawab penuh atas interpretasi dan keputusan yang diambil berdasarkan informasi di platform ini. PantauSehat tidak dapat dimintai pertanggungjawaban atas kerugian yang timbul dari penggunaan atau ketidakmampuan menggunakan layanan ini.
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════ CONTENT ══════════════ -->
+<main class="max-w-[1100px] mx-auto px-6 lg:px-8 pb-20 fade-up fade-up-d2">
+  <div class="grid lg:grid-cols-[220px_1fr] gap-12">
+
+    <!-- Sidebar TOC -->
+    <aside class="hidden lg:block">
+      <div class="sticky top-24 glass rounded-xl p-5">
+        <p class="font-mono text-[8.5px] font-bold text-white/40 uppercase tracking-[.18em] mb-5">Daftar Isi</p>
+        <nav class="space-y-3">
+          <a href="#pasal-1" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">I. Cakupan & Tujuan</a>
+          <a href="#pasal-2" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">II. Enkripsi Data</a>
+          <a href="#pasal-3" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">III. Kontrol Akses</a>
+          <a href="#pasal-4" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">IV. Sumber Data Resmi</a>
+          <a href="#pasal-5" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">V. Pemantauan Sistem</a>
+          <a href="#pasal-6" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">VI. Respons Insiden</a>
+          <a href="#pasal-7" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">VII. Pelaporan Kerentanan</a>
+          <a href="#pasal-8" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">VIII. Tanggung Jawab Pengguna</a>
+          <a href="#pasal-9" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">IX. Batasan Tanggung Jawab</a>
+          <a href="#pasal-10" class="block font-mono text-[10px] text-on-muted hover:text-coral transition-colors duration-200 tracking-[.05em]">X. Pembaruan Protokol</a>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main Articles -->
+    <div class="space-y-10">
+
+      <!-- Pasal I -->
+      <article id="pasal-1" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule" style="min-height:100%;"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal I</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Cakupan &amp; Tujuan</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Protokol Keamanan ini berlaku untuk seluruh komponen sistem PantauSehat, termasuk namun tidak terbatas pada: antarmuka web publik, infrastruktur backend, pipeline agregasi data, dan semua saluran komunikasi antara sistem dengan sumber data pihak ketiga.</p>
+              <p>Tujuan dokumen ini adalah untuk:</p>
+              <ul class="space-y-2 pl-4">
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Menetapkan standar minimum keamanan yang wajib dipatuhi oleh seluruh pengelola sistem.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Memberikan transparansi kepada publik tentang langkah-langkah perlindungan yang diterapkan.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Menetapkan prosedur respons insiden yang terstruktur.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Memenuhi kewajiban hukum berdasarkan Undang-Undang Perlindungan Data Pribadi (UU PDP) No. 27 Tahun 2022 dan peraturan terkait.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal II -->
+      <article id="pasal-2" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal II</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Enkripsi &amp; Transmisi Data</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Seluruh transmisi data antara klien dan server PantauSehat dilindungi menggunakan:</p>
+              <div class="grid sm:grid-cols-2 gap-3 my-5">
+                <div class="bg-surface-mid/60 rounded-xl p-4 border border-white/[.04]">
+                  <p class="font-mono text-[9px] text-cyan font-bold uppercase tracking-[.12em] mb-2">Transport</p>
+                  <p class="font-display text-[15px] font-bold text-white mb-1">TLS 1.3</p>
+                  <p class="text-[11.5px] text-on-muted">HTTPS wajib di seluruh endpoint. HTTP tidak dilayani dan dialihkan secara otomatis.</p>
+                </div>
+                <div class="bg-surface-mid/60 rounded-xl p-4 border border-white/[.04]">
+                  <p class="font-mono text-[9px] text-cyan font-bold uppercase tracking-[.12em] mb-2">Header Keamanan</p>
+                  <p class="font-display text-[15px] font-bold text-white mb-1">HSTS + CSP</p>
+                  <p class="text-[11.5px] text-on-muted">HTTP Strict Transport Security dengan max-age 1 tahun. Content Security Policy diterapkan untuk mencegah XSS.</p>
+                </div>
+                <div class="bg-surface-mid/60 rounded-xl p-4 border border-white/[.04]">
+                  <p class="font-mono text-[9px] text-cyan font-bold uppercase tracking-[.12em] mb-2">Sertifikat</p>
+                  <p class="font-display text-[15px] font-bold text-white mb-1">CA Terverifikasi</p>
+                  <p class="text-[11.5px] text-on-muted">Sertifikat SSL/TLS diterbitkan oleh Certificate Authority tepercaya dan diperbarui otomatis.</p>
+                </div>
+                <div class="bg-surface-mid/60 rounded-xl p-4 border border-white/[.04]">
+                  <p class="font-mono text-[9px] text-cyan font-bold uppercase tracking-[.12em] mb-2">Data Tersimpan</p>
+                  <p class="font-display text-[15px] font-bold text-white mb-1">AES-256</p>
+                  <p class="text-[11.5px] text-on-muted">Data konfigurasi dan cache yang disimpan server dienkripsi menggunakan AES-256-GCM.</p>
+                </div>
+              </div>
+              <p>PantauSehat <strong class="text-white/75">tidak menyimpan data kesehatan pribadi pengguna</strong> dalam bentuk apapun. Seluruh data kesehatan yang ditampilkan merupakan data agregat anonim yang bersumber dari lembaga resmi pemerintah.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal III -->
+      <article id="pasal-3" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal III</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Kontrol Akses</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Akses ke sistem backend dan infrastruktur dikendalikan dengan prinsip <em>least privilege</em> (hak akses minimum yang diperlukan):</p>
+              <ul class="space-y-2 pl-4 mt-4">
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">Autentikasi multi-faktor (MFA)</strong> diwajibkan untuk semua akun pengelola dengan akses ke panel administrasi dan infrastruktur cloud.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">API Key terpisah</strong> digunakan untuk setiap integrasi sumber data eksternal. Tidak ada kunci bersama.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">Session timeout otomatis</strong> diterapkan pada sesi administrasi yang tidak aktif selama 30 menit.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">Log audit</strong> dicatat untuk setiap tindakan administratif, termasuk perubahan data, penerbitan konten, dan perubahan konfigurasi.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">Akses publik</strong> ke dashboard bersifat read-only. Tidak ada fungsi penulisan atau modifikasi data yang tersedia bagi pengunjung umum.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal IV -->
+      <article id="pasal-4" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal IV</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Sumber Data Resmi</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Seluruh data epidemiologi yang disajikan di PantauSehat bersumber eksklusif dari lembaga-lembaga berikut:</p>
+              <div class="space-y-2 mt-4">
+                <div class="flex items-center gap-3 bg-surface-mid/40 rounded-lg px-4 py-3 border border-white/[.04]">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan flex-shrink-0"></span>
+                  <span class="font-mono text-[10px] text-cyan uppercase tracking-[.08em] w-48 flex-shrink-0">Kemenkes RI</span>
+                  <span class="text-[11.5px]">Kementerian Kesehatan Republik Indonesia — data surveilans nasional</span>
+                </div>
+                <div class="flex items-center gap-3 bg-surface-mid/40 rounded-lg px-4 py-3 border border-white/[.04]">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan flex-shrink-0"></span>
+                  <span class="font-mono text-[10px] text-cyan uppercase tracking-[.08em] w-48 flex-shrink-0">WHO Indonesia</span>
+                  <span class="text-[11.5px]">World Health Organization — kantor perwakilan Indonesia</span>
+                </div>
+                <div class="flex items-center gap-3 bg-surface-mid/40 rounded-lg px-4 py-3 border border-white/[.04]">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan flex-shrink-0"></span>
+                  <span class="font-mono text-[10px] text-cyan uppercase tracking-[.08em] w-48 flex-shrink-0">Litbangkes</span>
+                  <span class="text-[11.5px]">Badan Penelitian dan Pengembangan Kesehatan Kemenkes</span>
+                </div>
+                <div class="flex items-center gap-3 bg-surface-mid/40 rounded-lg px-4 py-3 border border-white/[.04]">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan flex-shrink-0"></span>
+                  <span class="font-mono text-[10px] text-cyan uppercase tracking-[.08em] w-48 flex-shrink-0">BNPB</span>
+                  <span class="text-[11.5px]">Badan Nasional Penanggulangan Bencana — laporan risiko wilayah</span>
+                </div>
+              </div>
+              <p class="mt-4">Data <strong class="text-white/70">tidak dimanipulasi, tidak diinterpolasi, dan tidak diperkirakan secara mandiri</strong> oleh tim PantauSehat di luar parameter yang telah ditetapkan oleh sumber resmi. Semua kalkulasi indeks risiko didasarkan pada metodologi yang dipublikasikan secara terbuka oleh Kemenkes RI.</p>
+              <p>PantauSehat <strong class="text-white/70">tidak bertanggung jawab</strong> atas keakuratan data yang diterbitkan oleh lembaga-lembaga sumber. Ketidakakuratan yang ditemukan harus dilaporkan langsung ke lembaga yang bersangkutan.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal V -->
+      <article id="pasal-5" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal V</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Pemantauan Sistem</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Infrastruktur PantauSehat dipantau secara berkelanjutan untuk memastikan ketersediaan, integritas, dan keamanan layanan:</p>
+              <ul class="space-y-2 pl-4 mt-3">
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">Uptime monitoring 24/7</strong> untuk mendeteksi gangguan layanan dalam hitungan menit.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">Deteksi anomali trafik</strong> untuk mengidentifikasi pola akses tidak wajar yang berindikasi serangan (DDoS, scraping agresif, brute-force).</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">Pemindaian kerentanan berkala</strong> menggunakan alat analisis statis dan dinamis yang dijalankan setiap rilis versi baru.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span><strong class="text-white/70">Log server</strong> disimpan selama 90 hari untuk keperluan forensik dan audit keamanan, kemudian dihapus secara permanen.</span></li>
+              </ul>
+              <p class="mt-3">Log akses server yang dikumpulkan mencakup: alamat IP (disamarkan sebagian), user-agent browser, dan timestamp permintaan — semata-mata untuk keperluan keamanan dan pemeliharaan teknis, bukan untuk profiling pengguna.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal VI -->
+      <article id="pasal-6" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal VI</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Respons Insiden Keamanan</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Dalam hal terjadi insiden keamanan yang berpotensi mempengaruhi integritas data atau ketersediaan layanan, tim PantauSehat akan:</p>
+              <div class="space-y-3 mt-4">
+                <div class="flex gap-4 items-start">
+                  <span class="font-mono text-[10px] font-bold text-coral w-16 flex-shrink-0 pt-0.5">0–2 Jam</span>
+                  <p>Mengisolasi sistem yang terdampak dan menghentikan eskalasi insiden. Memberi notifikasi kepada seluruh tim inti.</p>
+                </div>
+                <div class="w-full h-px bg-white/[.04]"></div>
+                <div class="flex gap-4 items-start">
+                  <span class="font-mono text-[10px] font-bold text-amber w-16 flex-shrink-0 pt-0.5">2–24 Jam</span>
+                  <p>Melakukan analisis forensik awal, mengidentifikasi akar masalah, dan menerapkan mitigasi sementara.</p>
+                </div>
+                <div class="w-full h-px bg-white/[.04]"></div>
+                <div class="flex gap-4 items-start">
+                  <span class="font-mono text-[10px] font-bold text-cyan w-16 flex-shrink-0 pt-0.5">24–72 Jam</span>
+                  <p>Menerbitkan laporan insiden publik (apabila berdampak pada layanan publik) dan menerapkan perbaikan permanen.</p>
+                </div>
+                <div class="w-full h-px bg-white/[.04]"></div>
+                <div class="flex gap-4 items-start">
+                  <span class="font-mono text-[10px] font-bold text-on-muted w-16 flex-shrink-0 pt-0.5">&gt;72 Jam</span>
+                  <p>Tinjauan pasca-insiden (post-mortem) dan pembaruan protokol keamanan untuk mencegah kejadian serupa.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal VII -->
+      <article id="pasal-7" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal VII</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Pelaporan Kerentanan (Responsible Disclosure)</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>PantauSehat mendukung program pelaporan kerentanan yang bertanggung jawab. Apabila Anda menemukan celah keamanan dalam sistem kami, kami mengundang Anda untuk melaporkannya secara bertanggung jawab.</p>
+              <p class="mt-2"><strong class="text-white/70">Yang termasuk dalam cakupan:</strong> kerentanan pada antarmuka web, endpoint API yang dapat dieksploitasi, kesalahan konfigurasi yang membocorkan data.</p>
+              <p><strong class="text-white/70">Yang tidak termasuk:</strong> serangan denial-of-service, social engineering terhadap staf, pengujian yang merusak ketersediaan layanan, atau akses tidak sah ke sistem tanpa otorisasi tertulis.</p>
+              <div class="bg-surface-mid/60 rounded-xl p-4 border border-white/[.04] mt-5">
+                <p class="font-mono text-[9px] text-coral font-bold uppercase tracking-[.14em] mb-2">Saluran Pelaporan</p>
+                <p class="text-[12px] text-on-muted">Laporan kerentanan dapat dikirimkan melalui alamat: <strong class="text-white/80">security@pantausehat.id</strong></p>
+                <p class="text-[11.5px] text-on-muted/60 mt-2">Kami berkomitmen merespons laporan valid dalam waktu 5 hari kerja. Tidak ada tindakan hukum yang akan diambil terhadap peneliti yang mengikuti panduan pelaporan ini.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal VIII -->
+      <article id="pasal-8" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal VIII</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Tanggung Jawab Pengguna</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Dengan mengakses PantauSehat, pengguna menyetujui untuk <strong class="text-white/70">tidak</strong> melakukan hal-hal berikut:</p>
+              <ul class="space-y-2 pl-4 mt-3">
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Melakukan scraping otomatis dalam skala besar yang mengganggu kinerja layanan.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Berupaya mengakses bagian sistem yang tidak dimaksudkan untuk akses publik.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Mendistribusikan ulang data PantauSehat dengan atribusi yang salah atau menyesatkan.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Menggunakan data ini sebagai pengganti konsultasi medis profesional atau untuk membuat keputusan klinis.</span></li>
+                <li class="flex gap-2"><span class="text-coral flex-shrink-0 mt-1">—</span><span>Menyebarkan informasi dari platform ini di luar konteks yang dapat menyebabkan kepanikan publik yang tidak berdasar.</span></li>
+              </ul>
+              <p class="mt-3">Pelanggaran terhadap ketentuan ini dapat mengakibatkan pemblokiran akses dan/atau tindakan hukum berdasarkan peraturan perundang-undangan yang berlaku di Indonesia.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal IX -->
+      <article id="pasal-9" class="glass rounded-2xl p-7 border-coral/[.08]">
+        <div class="flex gap-5">
+          <div class="section-rule" style="background: linear-gradient(to bottom, #e7c365, transparent);"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3" style="color:rgba(231,195,101,.6);">Pasal IX</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Batasan Tanggung Jawab (<em>Limitation of Liability</em>)</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Sejauh diizinkan oleh hukum yang berlaku, PantauSehat, tim VLOOB, operator, dan afiliasinya <strong class="text-white/70">tidak bertanggung jawab</strong> atas:</p>
+              <ul class="space-y-2 pl-4 mt-3">
+                <li class="flex gap-2"><span class="text-amber flex-shrink-0 mt-1">—</span><span>Keputusan medis, klinis, atau kebijakan yang diambil berdasarkan data yang ditampilkan di platform ini.</span></li>
+                <li class="flex gap-2"><span class="text-amber flex-shrink-0 mt-1">—</span><span>Kerugian langsung, tidak langsung, insidental, atau konsekuensial yang timbul dari penggunaan atau ketidakmampuan menggunakan layanan ini.</span></li>
+                <li class="flex gap-2"><span class="text-amber flex-shrink-0 mt-1">—</span><span>Ketidakakuratan, keterlambatan, atau ketidaklengkapan data yang bersumber dari lembaga pemerintah atau pihak ketiga.</span></li>
+                <li class="flex gap-2"><span class="text-amber flex-shrink-0 mt-1">—</span><span>Gangguan layanan akibat force majeure, serangan siber, atau kegagalan infrastruktur pihak ketiga.</span></li>
+                <li class="flex gap-2"><span class="text-amber flex-shrink-0 mt-1">—</span><span>Interpretasi data yang keliru oleh pengguna atau pihak lain yang menerima data melalui pengguna.</span></li>
+              </ul>
+              <p class="mt-4 text-[12px] font-light">Data yang tersedia di PantauSehat disajikan "<strong class="text-white/60">apa adanya</strong>" (<em>as-is</em>) dan "<strong class="text-white/60">sebagaimana tersedia</strong>" (<em>as-available</em>) tanpa jaminan apapun, baik tersurat maupun tersirat, termasuk namun tidak terbatas pada jaminan kelayakan untuk tujuan tertentu atau akurasi.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Pasal X -->
+      <article id="pasal-10" class="glass rounded-2xl p-7">
+        <div class="flex gap-5">
+          <div class="section-rule"></div>
+          <div class="flex-1">
+            <p class="article-num mb-3">Pasal X</p>
+            <h2 class="font-display text-[18px] font-bold text-white h-snug mb-4">Pembaruan Protokol</h2>
+            <div class="space-y-3 text-[13px] text-on-muted leading-[1.8]">
+              <p>Protokol Keamanan ini ditinjau dan diperbarui secara triwulanan, atau lebih cepat apabila terjadi perubahan signifikan pada infrastruktur sistem, regulasi yang berlaku, atau lanskap ancaman keamanan siber.</p>
+              <p>Perubahan material pada protokol ini akan diumumkan melalui <strong class="text-white/70">notifikasi di halaman utama dashboard</strong> selama minimal 14 hari sebelum perubahan berlaku efektif. Penggunaan berkelanjutan atas layanan PantauSehat setelah tanggal efektif pembaruan dianggap sebagai penerimaan atas perubahan tersebut.</p>
+              <p>Versi terdahulu dari dokumen ini dapat diminta melalui: <strong class="text-white/70">legal@pantausehat.id</strong></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</main>
+
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="border-t border-white/[.04]">
+  <div class="max-w-[1100px] mx-auto px-6 lg:px-8 py-7 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div class="font-mono text-[9px] text-on-muted/38 uppercase tracking-[.15em]">
+      © 2026 PantauSehat Indonesia. &nbsp;·&nbsp; VLOOB.teams
+    </div>
+    <div class="flex gap-7 font-mono text-[9px] text-on-muted/38 uppercase tracking-[.13em]">
+      <a href="protokol-keamanan.html" class="text-coral/70">Protokol Keamanan</a>
+      <a href="privasi-data.html" class="hover:text-white transition-colors duration-200">Privasi Data</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
