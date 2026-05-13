@@ -29,6 +29,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
 <script>
@@ -483,7 +484,6 @@ tailwind.config = {
             Masuk ke Dashboard
             <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
-          <button class="ob-skip" onclick="obDismiss()">Lewati</button>
         </div>
       </div>
     </div>
@@ -1081,6 +1081,32 @@ tailwind.config = {
              style="background:linear-gradient(to top,rgba(7,7,8,.95),transparent)"></div>
 
         <div id="briefings-feed" class="overflow-y-auto space-y-3 pr-1 briefings-scroll" style="max-height:540px;scrollbar-width:thin;scrollbar-color:rgba(255,95,69,.25) transparent;">
+
+          <!-- skeleton loaders -->
+          <div class="briefing-skeleton glass p-4 rounded-2xl flex gap-4 animate-pulse">
+            <div class="w-[72px] h-[72px] rounded-xl flex-shrink-0" style="background:rgba(255,255,255,.05)"></div>
+            <div class="flex-1 space-y-2 py-1">
+              <div class="h-2 rounded" style="background:rgba(255,255,255,.07);width:30%"></div>
+              <div class="h-3 rounded" style="background:rgba(255,255,255,.07);width:90%"></div>
+              <div class="h-3 rounded" style="background:rgba(255,255,255,.05);width:75%"></div>
+            </div>
+          </div>
+          <div class="briefing-skeleton glass p-4 rounded-2xl flex gap-4 animate-pulse">
+            <div class="w-[72px] h-[72px] rounded-xl flex-shrink-0" style="background:rgba(255,255,255,.05)"></div>
+            <div class="flex-1 space-y-2 py-1">
+              <div class="h-2 rounded" style="background:rgba(255,255,255,.07);width:25%"></div>
+              <div class="h-3 rounded" style="background:rgba(255,255,255,.07);width:85%"></div>
+              <div class="h-3 rounded" style="background:rgba(255,255,255,.05);width:60%"></div>
+            </div>
+          </div>
+          <div class="briefing-skeleton glass p-4 rounded-2xl flex gap-4 animate-pulse">
+            <div class="w-[72px] h-[72px] rounded-xl flex-shrink-0" style="background:rgba(255,255,255,.05)"></div>
+            <div class="flex-1 space-y-2 py-1">
+              <div class="h-2 rounded" style="background:rgba(255,255,255,.07);width:35%"></div>
+              <div class="h-3 rounded" style="background:rgba(255,255,255,.07);width:80%"></div>
+              <div class="h-3 rounded" style="background:rgba(255,255,255,.05);width:70%"></div>
+            </div>
+          </div>
 
           <!-- 1 — detikHealth -->
           <a href="https://health.detik.com/berita-detikhealth/d-8479697/hantavirus-juga-ada-di-ri-kemenkes-catat-23-kasus-dalam-3-tahun-terakhir"
@@ -2952,7 +2978,7 @@ function obGoSlide2() {
 
 function obDismiss() {
   if (!_obReady) return;
-  _obDone = true; // stops the enforcement interval
+  _obDone = true;
   var overlay = document.getElementById('onboarding-overlay');
   overlay.style.cssText = 'display:flex;opacity:0;transition:opacity .55s cubic-bezier(.16,1,.3,1);';
   setTimeout(function() {
@@ -2961,6 +2987,90 @@ function obDismiss() {
   }, 560);
   localStorage.setItem('ps_onboarded', '1');
 }
+</script>
+
+<script>
+(function loadBriefings() {
+  const SUPABASE_URL = 'https://yxpsgidkczgdmabbwqcp.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cHNnaWRrY3pnZG1hYmJ3cWNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDk1MzcsImV4cCI6MjA5Mzk4NTUzN30.V2qqUaC8OoYsM2ThTEW8FgaA0XRzNQ2_-Lh65-Oj2Ho';
+
+  const feed = document.getElementById('briefings-feed');
+  const updatedEl = document.getElementById('briefings-updated');
+
+  function relativeTime(iso) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(mins / 60);
+    const days = Math.floor(hours / 24);
+    if (mins < 60) return mins + ' menit lalu';
+    if (hours < 24) return hours + ' jam lalu';
+    if (days === 1) return '1 hari lalu';
+    if (days < 7) return days + ' hari lalu';
+    return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  }
+
+  function tagColor(color) {
+    if (color === 'coral') return 'text-coral/75';
+    if (color === 'amber') return 'text-amber/75';
+    return 'text-cyan/75';
+  }
+
+  function placeholderFor(color) {
+    if (color === 'coral') return 'https://placehold.co/72x72/1a1014/3d2020';
+    if (color === 'amber') return 'https://placehold.co/72x72/111a14/1f3a22';
+    return 'https://placehold.co/72x72/10141a/1e3040';
+  }
+
+  function renderArticle(a) {
+    const ph = placeholderFor(a.color);
+    const thumb = a.thumbnail || ph;
+    return `<a href="${a.link}" target="_blank" rel="noopener noreferrer"
+      class="glass p-4 rounded-2xl flex gap-4 group cursor-pointer hover:shadow-[0_0_28px_rgba(255,95,69,.07)] transition-shadow duration-500 no-underline block">
+      <div class="w-[72px] h-[72px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[.05] bg-surface-mid relative">
+        <img src="${thumb}" alt="" class="w-full h-full object-cover opacity-80 img-zoom" onerror="this.src='${ph}'"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2.5 mb-1.5 flex-wrap">
+          <span class="font-mono text-[8.5px] font-bold ${tagColor(a.color)} uppercase tracking-[.13em]">${a.tag}</span>
+          <span class="font-mono text-[8.5px] text-white/18 uppercase tracking-[.1em]">· ${relativeTime(a.pub_date)} ·</span>
+          <span class="font-mono text-[8px] text-white/30 uppercase tracking-[.08em]">${a.source}</span>
+        </div>
+        <h5 class="text-[12.5px] font-display font-bold text-white mb-1 leading-snug group-hover:text-coral transition-colors duration-200">${a.title}</h5>
+        <p class="text-[10.5px] text-on-muted leading-relaxed line-clamp-2 font-light">${a.description || ''}</p>
+      </div>
+    </a>`;
+  }
+
+  async function fetchAndRender() {
+    try {
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      const { data, error } = await sb
+        .from('briefings')
+        .select('title,description,link,thumbnail,source,tag,color,pub_date')
+        .order('pub_date', { ascending: false })
+        .limit(20);
+
+      if (error || !data || !data.length) throw new Error('no data');
+
+      // Remove skeletons + hardcoded articles, inject live data
+      feed.innerHTML = data.map(renderArticle).join('');
+
+      const latest = new Date(data[0].pub_date);
+      updatedEl.textContent = 'Diperbarui ' + latest.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+    } catch (e) {
+      // Keep hardcoded articles visible on error, just remove skeletons
+      document.querySelectorAll('.briefing-skeleton').forEach(el => el.remove());
+      updatedEl.textContent = 'Data lokal';
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fetchAndRender);
+  } else {
+    fetchAndRender();
+  }
+})();
 </script>
 
 
